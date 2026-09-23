@@ -84,6 +84,20 @@ El caso 5 (ventrículo de 700 mL, FEVI de 7 %) queda dentro de tolerancia en FEV
 
 **Decisiones.** Títulos técnicos en los seis casos. Las pistas diagnósticas pasan a un campo `reveladas` del manifiesto que la segunda parte muestra en el cierre bajo «Lo que el tutorial no te dijo antes». El comparador de la copia corregida distingue idéntica, remuestreada bajo un vóxel y desplazada, y una casilla permite ver la copia en el cine, el sinograma y la suma. El bloque gatillado informa cuentas por intervalo y por vista y la fracción respecto a la cruda. El paso del CT ya no avisa el rótulo del caso 3: lo explica en su detalle después de aceptarlo, porque lo que decide es el marco de referencia, y la pregunta del error de registro de diez milímetros dice cómo comprobarlo.
 
+### 8. Lo que apareció al usarlo con el mouse: caso 2
+
+**Contexto.** El docente probó el caso 2 y tuvo muchos problemas. Las pruebas anteriores definían el eje por programa y siempre usaban la OSEM con AC; una prueba nueva que hace clic sobre los lienzos, carga la carpeta de referencia del equipo y alterna a la reconstrucción sin AC encontró cinco defectos que un alumno sí sufre.
+
+**Defectos y arreglos.**
+- **El tutorial arrastraba de vuelta a la pantalla 1.** El panel pide ir a la pantalla del primer paso pendiente en cada redibujo. Mientras la carga tuviera cualquier reparo, mover un control cualquiera devolvía al alumno al inicio y hacía imposible marcar el eje. Ahora la petición se obedece una sola vez por cambio de paso.
+- **La carpeta «Referencia equipo» bloqueaba la carga.** La reconstrucción transversal del equipo no coincidía con ningún papel y quedaba como «no reconocido», un problema que nunca se resolvía. Cualquier reconstrucción sin «Caso N» en la descripción es ahora referencia y no bloquea. La OSEM 1×1 exportada por error se reconoce por su derivación y se ignora si existe la 2×8; solo bloquea si es la única.
+- **Sin AC mostraba otra región del cuerpo.** El centro del eje se guardaba como índice de corte del volumen donde se marcó, pero la OSEM con AC trae solo los cortes cubiertos por el CT y la sin AC los 128: el mismo índice cae 49 cortes más abajo. Al alternar «Sin AC» la página de cortes mostraba el abdomen. El centro se traslada ahora entre volúmenes por la posición del primer corte, igual que ya se hacía con el gatillado.
+- **El eje largo vertical se movía al marcarlo.** Los dos clics cambiaban el centro y el azimut, el plano se redibujaba y las marcas quedaban fuera del corazón. El plano queda congelado al terminar la transaxial.
+- **El paso se daba por hecho con dos clics.** La elevación arrancaba en 10° por omisión y el tutorial aceptaba el eje sin el eje largo. Ahora queda pendiente hasta marcarlo o escribirla a mano.
+- **La transaxial inicial caía en el hígado.** El corte inicial era el más brillante del centro del campo; ahora es el que pasa por el ventrículo según el buscador de anillos.
+
+**Validación.** Prueba con clics reales en el caso 2: azimut y elevación quedan a menos de 2° del eje del equipo en las dos fases, el eje corto central es un anillo tanto con AC como sin AC, y la referencia del equipo y la 1×1 cargadas junto a los productos no bloquean nada. Los demás simuladores renales y de tiroides comparten el panel de tutorial y el mismo comportamiento de arrastre: no se tocaron.
+
 ### Pendientes y advertencias
 
 - Las descripciones de serie del equipo se conservan tal cual, incluido el CT «AC REST» del estrés del caso 3: es material didáctico, no un error de la entrega.

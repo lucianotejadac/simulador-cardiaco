@@ -33,7 +33,9 @@ const CardiacoCore=(()=>{
   // Posicion del primer corte (la raiz o el detector): permite alinear en Z el volumen gatillado,
   // que solo trae los cortes del corazon, con el volumen completo de la misma fase.
   const posicion=(text(d,'x00200032')?nums(d,'x00200032'):(det&&text(det,'x00200032')?nums(det,'x00200032'):null));
-  return {nombre:file.name,bytes,hash:fnv(raw),n,nz,slots,spacing:sp[0],dz,data,posicion,descripcion:text(d,'x0008103e'),frame:text(d,'x00200052'),tipo,vista,fecha:text(d,'x00080020'),paciente:{nombre:text(d,'x00100010'),id:text(d,'x00100020'),edad:text(d,'x00101010'),sexo:text(d,'x00100040')}};
+  // La derivacion (0008,2111) escrita por SPECT Lab 95 dice con que receta se reconstruyo.
+  const derivacion=text(d,'x00082111'),rec=/iterations=(\d+);\s*subsets=(\d+)/.exec(derivacion),receta=rec?{iteraciones:Number(rec[1]),subconjuntos:Number(rec[2])}:null;
+  return {nombre:file.name,bytes,hash:fnv(raw),n,nz,slots,spacing:sp[0],dz,data,posicion,derivacion,receta,descripcion:text(d,'x0008103e'),frame:text(d,'x00200052'),tipo,vista,fecha:text(d,'x00080020'),paciente:{nombre:text(d,'x00100010'),id:text(d,'x00100020'),edad:text(d,'x00101010'),sexo:text(d,'x00100040')}};
  }
  /* Muestreo trilineal en coordenadas de voxel (x,y,z), 0 fuera del volumen. */
  function muestra(vol,n,nz,x,y,z){

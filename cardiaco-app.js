@@ -11,18 +11,29 @@ const S={caso:null,vols:[],ignorados:[],seleccion:null,paleta:'cardiaca',techo:1
  polarTipo:'AC',polarUmbral:.5,polarNumeros:true,polar:{},
  gatedFase:'estres',gatedT:1,gatedUmbral:.55,gated:{estres:{ED:null,ES:null,vol:[]},reposo:{ED:null,ES:null,vol:[]}},
  exportados:{cortes:false,polar:false,gated:false},paso:0};
-function nuevoEje(){return {az:null,el:null,C:null,L:null,axial:[],vla:[]};}
-let tutorial=null,cineTimer=null;
+// El centro C del eje se guarda en el espacio de indices del volumen donde se marco; origenZ y
+// dz permiten trasladarlo a cualquier otro volumen de la misma fase (la OSEM con AC solo trae los
+// cortes cubiertos por el CT, la sin AC trae los 128, y el gatillado solo los del corazon).
+function nuevoEje(){return {az:null,el:null,C:null,L:null,origenZ:null,dz:null,plano:null,axial:[],vla:[]};}
+function centroPara(v,f){const e=S.ejes[f];if(!e.C||!v)return e.C;if(e.origenZ===null||!v.posicion)return e.C;return [e.C[0],e.C[1],e.C[2]-(v.posicion[2]-e.origenZ)/(v.dz||e.dz||1)];}
+let tutorial=null,cineTimer=null,ultimaPantallaTutorial=null;
 const paginas={cortes:null,polar:null,gated:null};
 function estado(msg){$('status').textContent=msg;}
 /* ---------- volumenes ---------- */
 function reconocer(v){
  const n=S.caso;
- for(const caso of (n?[n]:Object.keys(CARDIACO_CASOS).map(Number)))for(const f of CARDIACO_FASES)for(const t of ['gatillado','AC','NoAC'])if(cardiacoReconoceNombre(v.descripcion,caso,f,t))return {caso,fase:f,tipo:t};
- if(/short axis|eje corto/i.test(v.vista+' '+v.descripcion)&&!/caso/i.test(v.descripcion))return {caso:n,fase:/rest|reposo/i.test(v.descripcion)?'reposo':'estres',tipo:'referencia'};
+ // receta: true si es la OSEM del curso; false si es otra (la 1x1 de referencia exportada por error).
+ const receta=!v.receta||(v.receta.iteraciones===CARDIACO_RECETA.iteraciones&&v.receta.subconjuntos===CARDIACO_RECETA.subconjuntos);
+ for(const caso of (n?[n]:Object.keys(CARDIACO_CASOS).map(Number)))for(const f of CARDIACO_FASES)for(const t of ['gatillado','AC','NoAC'])if(cardiacoReconoceNombre(v.descripcion,caso,f,t))return {caso,fase:f,tipo:t,receta};
+ // Cualquier reconstruccion del equipo (sin "Caso N" en la descripcion) se acepta como referencia
+ // y no bloquea nada: el alumno puede cargar la carpeta "Referencia equipo" entera.
+ if(!/caso\s*\d/i.test(v.descripcion))return {caso:n,fase:/rest|reposo/i.test(v.descripcion)?'reposo':'estres',tipo:'referencia',receta:true,vista:v.vista||v.descripcion};
  return null;
 }
-function vol(fase,tipo){return S.vols.find(v=>v.rec&&v.rec.tipo===tipo&&v.rec.fase===fase&&(S.caso===null||v.rec.caso===S.caso))||null;}
+// Avisos que no bloquean la carga: se muestran como detalle del paso.
+function avisosCarga(){const p=[];for(const v of S.vols){if(v.rec&&v.rec.receta===false&&vol(v.rec.fase,v.rec.tipo)!==v)p.push('«'+v.nombre+'» es la OSEM de referencia '+v.receta.iteraciones+'×'+v.receta.subconjuntos+': se ignora y se usa la 2×8 del mismo tipo.');if(v.rec&&v.rec.tipo==='referencia')p.push('«'+v.nombre+'» es una reconstrucción del equipo ('+v.descripcion+'): solo referencia.');}return p;}
+// Entre varios volumenes del mismo papel gana el de la receta del curso; la 1x1 solo si no hay otro.
+function vol(fase,tipo){const lista=S.vols.filter(v=>v.rec&&v.rec.tipo===tipo&&v.rec.fase===fase&&(S.caso===null||v.rec.caso===S.caso));return lista.find(v=>v.rec.receta)||lista[0]||null;}
 function tieneCT(){return S.caso&&Object.values(CARDIACO_CASOS[S.caso].fases).some(f=>Object.keys(f.ct||{}).length);}
 function tipoDisponible(fase,pref){return vol(fase,pref)?pref:(vol(fase,pref==='AC'?'NoAC':'AC')?(pref==='AC'?'NoAC':'AC'):null);}
 function volGuia(fase){const t=tipoDisponible(fase,'AC');return t?vol(fase,t):null;}
@@ -44,7 +55,8 @@ function faltantes(){return requeridos().filter(([f,t])=>!vol(f,t));}
 function problemasCarga(){
  const p=[];
  for(const v of S.vols){if(!v.rec)p.push('«'+v.nombre+'» no se reconoce: su descripción es «'+v.descripcion+'». Los volúmenes de la primera parte llevan «Caso N fase tipo» en la descripción; si lo exportaste sin nombre, vuelve a exportarlo.');
-  else if(S.caso!==null&&v.rec.caso!==S.caso)p.push('«'+v.nombre+'» es del caso '+v.rec.caso+', no del caso '+S.caso+'.');}
+  else if(S.caso!==null&&v.rec.caso!==S.caso)p.push('«'+v.nombre+'» es del caso '+v.rec.caso+', no del caso '+S.caso+'.');
+  else if(!v.rec.receta&&vol(v.rec.fase,v.rec.tipo)===v)p.push('«'+v.nombre+'» es la OSEM de referencia '+v.receta.iteraciones+'×'+v.receta.subconjuntos+', no la receta del curso. Vuelve a SPECT Lab 95 y exporta la 2×8 con ese nombre.');}
  const f=faltantes();if(S.vols.length&&f.length)p.push('Falta: '+f.map(([fase,t])=>CARDIACO_NOMBRE_FASE[fase]+' '+t).join('; ')+'.');
  return p;
 }
@@ -65,8 +77,16 @@ function tablaInfo(v){
 /* ---------- eje ---------- */
 function ejeActual(){return S.ejes[S.ejeFase];}
 function volumenEje(){const f=S.ejeFase;const v=S.vols.find(x=>x.hash===S.ejeVolumenHash&&x.rec&&x.rec.fase===f&&x.rec.tipo!=='gatillado'&&x.rec.tipo!=='referencia');return v||volGuia(f);}
-function marcoDe(eje){return C.marco(eje.az,eje.el);}
-function zInicial(v){let mejor=0,mz=Math.floor(v.nz/2);const n=v.n,c=n>>1,r=24,d=v.data[0];for(let z=0;z<v.nz;z++){let mx=0;for(let y=c-r;y<c+r;y++)for(let x=c-r;x<c+r;x++)mx=Math.max(mx,d[z*n*n+y*n+x]);if(mx>mejor){mejor=mx;mz=z;}}return mz;}
+function marcoDe(eje){return C.marco(eje.az,eje.el??0);}
+// Corte inicial de la transaxial: el que pasa por el ventriculo si el buscador de anillos lo
+// encuentra; si no, el corte mas brillante de la region central.
+const cacheZ=new Map();
+function zInicial(v){
+ if(cacheZ.has(v.hash))return cacheZ.get(v.hash);
+ let z=null;try{const b=C.buscarVentriculo(v.data[0],v.n,v.nz,C.marco(35,12),v.spacing);if(b)z=Math.max(0,Math.min(v.nz-1,Math.round(b.C[2])));}catch(err){z=null;}
+ if(z===null){let mejor=0;z=Math.floor(v.nz/2);const n=v.n,c=n>>1,r=24,d=v.data[0];for(let k=0;k<v.nz;k++){let mx=0;for(let y=c-r;y<c+r;y++)for(let x=c-r;x<c+r;x++)mx=Math.max(mx,d[k*n*n+y*n+x]);if(mx>mejor){mejor=mx;z=k;}}}
+ cacheZ.set(v.hash,z);return z;
+}
 function dibujarAxial(){
  const v=volumenEje(),cv=$('axial');const ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);if(!v)return;
  if(S.axialZ===null)S.axialZ=zInicial(v);$('axialZ').max=v.nz-1;$('axialZ').value=S.axialZ;
@@ -77,9 +97,12 @@ function dibujarAxial(){
  if(e.axial.length===2){ctx.beginPath();ctx.moveTo((e.axial[0][0]+.5)*k,(e.axial[0][1]+.5)*k);ctx.lineTo((e.axial[1][0]+.5)*k,(e.axial[1][1]+.5)*k);ctx.stroke();}
  ctx.restore();
 }
-function vlaPlano(){const e=ejeActual();if(e.az===null||!e.C)return null;const M0=C.marco(e.az,0);return {derecha:M0.a.map(q=>-q),abajo:[0,0,-1],normal:M0.u,C:e.C};}
+// El plano del eje largo vertical queda congelado al terminar los dos clics de la transaxial:
+// asi la imagen no se mueve cuando los clics en el eje largo cambian el centro y el azimut, y las
+// marcas siguen sobre lo que el alumno marco. Su centro esta en el espacio del volumen guia.
+function vlaPlano(v){const e=ejeActual();if(!e.plano||!e.C)return null;const M0=C.marco(e.plano.az,0),Cv=v?[e.plano.C[0],e.plano.C[1],e.plano.C[2]-((v.posicion&&e.origenZ!==null)?(v.posicion[2]-e.origenZ)/(v.dz||1):0)]:e.plano.C;return {derecha:M0.a.map(q=>-q),abajo:[0,0,-1],normal:M0.u,C:Cv};}
 function dibujarVlaMarca(){
- const v=volumenEje(),cv=$('vlaMarca'),ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);const pl=vlaPlano();if(!v||!pl)return;
+ const v=volumenEje(),cv=$('vlaMarca'),ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);const pl=vlaPlano(v);if(!v||!pl)return;
  const img=C.corte(v.data[0],v.n,v.nz,pl.C,pl.derecha,pl.abajo,pl.normal,0,M,1);C.pintar(cv,img,M,{paleta:S.paleta,techo:S.techo,max:C.percentil(v.data[0],.999)});
  const e=ejeActual(),k=cv.width/M;ctx.save();ctx.strokeStyle='#0f0';ctx.fillStyle='#0f0';ctx.lineWidth=2;
  e.vla.forEach((p,i)=>{ctx.beginPath();ctx.arc((p[0]+.5)*k,(p[1]+.5)*k,5,0,2*Math.PI);ctx.stroke();ctx.font='14px Arial';ctx.fillText(i?'ápex':'base',(p[0]+.5)*k+8,(p[1]+.5)*k-8);});
@@ -88,24 +111,25 @@ function dibujarVlaMarca(){
 }
 function dibujarPrevio(){
  const v=volumenEje(),e=ejeActual();for(const id of ['prevSax','prevVla','prevHla'])$(id).getContext('2d').clearRect(0,0,192,192);
- if(!v||e.az===null||e.el===null||!e.C)return;const Mk=marcoDe(e),max=C.percentil(v.data[0],.999);
- C.pintar($('prevSax'),C.ejeCorto(v.data[0],v.n,v.nz,e.C,Mk,0,M,1),M,{paleta:S.paleta,techo:S.techo,max});
- C.pintar($('prevVla'),C.ejeLargoVertical(v.data[0],v.n,v.nz,e.C,Mk,0,M,1),M,{paleta:S.paleta,techo:S.techo,max});
- C.pintar($('prevHla'),C.ejeLargoHorizontal(v.data[0],v.n,v.nz,e.C,Mk,0,M,1),M,{paleta:S.paleta,techo:S.techo,max});
+ if(!v||e.az===null||!e.C)return;const Mk=marcoDe(e),max=C.percentil(v.data[0],.999),Cv=centroPara(v,S.ejeFase);
+ C.pintar($('prevSax'),C.ejeCorto(v.data[0],v.n,v.nz,Cv,Mk,0,M,1),M,{paleta:S.paleta,techo:S.techo,max});
+ C.pintar($('prevVla'),C.ejeLargoVertical(v.data[0],v.n,v.nz,Cv,Mk,0,M,1),M,{paleta:S.paleta,techo:S.techo,max});
+ C.pintar($('prevHla'),C.ejeLargoHorizontal(v.data[0],v.n,v.nz,Cv,Mk,0,M,1),M,{paleta:S.paleta,techo:S.techo,max});
 }
 function clicAxial(ev){
  const v=volumenEje();if(!v)return;const cv=$('axial'),r=cv.getBoundingClientRect(),x=(ev.clientX-r.left)/r.width*v.n-.5,y=(ev.clientY-r.top)/r.height*v.n-.5,e=ejeActual();
- if(e.axial.length>=2)e.axial=[];e.axial.push([x,y,S.axialZ]);
- if(e.axial.length===2){const [b,a]=e.axial;const ang=C.angulosDe(a[0]-b[0],a[1]-b[1],0);e.az=+ang.azimut.toFixed(1);if(e.el===null)e.el=10;e.C=[(a[0]+b[0])/2,(a[1]+b[1])/2,S.axialZ];e.L=Math.hypot(a[0]-b[0],a[1]-b[1]);e.vla=[];estado('Azimut '+e.az+'°. Ahora marca base y ápex en el eje largo vertical.');}
+ if(e.axial.length>=2){e.axial=[];e.vla=[];e.el=null;e.plano=null;}e.axial.push([x,y,S.axialZ]);
+ if(e.axial.length===2){const [b,a]=e.axial;const ang=C.angulosDe(a[0]-b[0],a[1]-b[1],0);e.az=+ang.azimut.toFixed(1);e.C=[(a[0]+b[0])/2,(a[1]+b[1])/2,S.axialZ];e.L=Math.hypot(a[0]-b[0],a[1]-b[1]);e.origenZ=v.posicion?v.posicion[2]:null;e.dz=v.dz;e.plano={az:e.az,C:e.C.slice()};e.vla=[];estado('Azimut '+e.az+'°. Ahora marca base y ápex en el eje largo vertical.');}
  else estado('Base marcada. Ahora haz clic en el ápex.');
  invalidar();refrescar();
 }
 function clicVla(ev){
- const v=volumenEje(),pl=vlaPlano();if(!v||!pl)return;const cv=$('vlaMarca'),r=cv.getBoundingClientRect(),i=(ev.clientX-r.left)/r.width*M-.5,j=(ev.clientY-r.top)/r.height*M-.5,e=ejeActual();
+ const v=volumenEje(),pl=vlaPlano(v);if(!v||!pl)return;const cv=$('vlaMarca'),r=cv.getBoundingClientRect(),i=(ev.clientX-r.left)/r.width*M-.5,j=(ev.clientY-r.top)/r.height*M-.5,e=ejeActual();
  if(e.vla.length>=2)e.vla=[];e.vla.push([i,j]);
  if(e.vla.length===2){const h=(M-1)/2,[b,a]=e.vla;const dR=a[0]-b[0],dD=a[1]-b[1];e.el=+(Math.atan2(dD,-dR)*180/Math.PI).toFixed(1);
   const p3=p=>[pl.C[0]+pl.derecha[0]*(p[0]-h)+pl.abajo[0]*(p[1]-h),pl.C[1]+pl.derecha[1]*(p[0]-h)+pl.abajo[1]*(p[1]-h),pl.C[2]+pl.derecha[2]*(p[0]-h)+pl.abajo[2]*(p[1]-h)];const A=p3(a),B=p3(b);
-  e.C=[(A[0]+B[0])/2,(A[1]+B[1])/2,(A[2]+B[2])/2];e.L=Math.hypot(A[0]-B[0],A[1]-B[1],A[2]-B[2]);
+  // El plano se dibujo en el espacio del volumen guia actual: el centro nuevo tambien queda ahi.
+  e.C=[(A[0]+B[0])/2,(A[1]+B[1])/2,(A[2]+B[2])/2];e.L=Math.hypot(A[0]-B[0],A[1]-B[1],A[2]-B[2]);e.origenZ=v.posicion?v.posicion[2]:null;e.dz=v.dz;
   // Ajusta el azimut con la direccion 3D definitiva (por si el ápex no estaba en el corte).
   const ang=C.angulosDe(A[0]-B[0],A[1]-B[1],A[2]-B[2]);e.az=+ang.azimut.toFixed(1);e.el=+ang.elevacion.toFixed(1);
   estado('Eje definido: azimut '+e.az+'°, elevación '+e.el+'°, largo '+C.fmt(e.L*v.spacing,0)+' mm.');}
@@ -126,8 +150,9 @@ function detalleEje(f){const e=S.ejes[f];if(!ejeDefinido(f))return '';const ref=
 function pila(v,f,tipoCorte,cantidad,margenMm,marco){
  const e=S.ejes[f],Mk=marco||marcoDe(e),sp=v.spacing,mg=margenMm/sp,out=[];
  const tA=e.L/2+mg,tB=-e.L/2;
- for(let k=0;k<cantidad;k++){let img;if(tipoCorte==='sax'){const t=tA-(tA-tB)*k/(cantidad-1);img=C.ejeCorto(v.data[0],v.n,v.nz,v.rec.tipo==='gatillado'?centroGated(v,f):e.C,Mk,t,M,1);}
-  else{const ancho=Math.max(4,e.L*.55),t=-ancho/2+ancho*k/(cantidad-1);img=(tipoCorte==='vla'?C.ejeLargoVertical:C.ejeLargoHorizontal)(v.data[0],v.n,v.nz,v.rec.tipo==='gatillado'?centroGated(v,f):e.C,Mk,t,M,1);}
+ const Cv=centroPara(v,f);
+ for(let k=0;k<cantidad;k++){let img;if(tipoCorte==='sax'){const t=tA-(tA-tB)*k/(cantidad-1);img=C.ejeCorto(v.data[0],v.n,v.nz,Cv,Mk,t,M,1);}
+  else{const ancho=Math.max(4,e.L*.55),t=-ancho/2+ancho*k/(cantidad-1);img=(tipoCorte==='vla'?C.ejeLargoVertical:C.ejeLargoHorizontal)(v.data[0],v.n,v.nz,Cv,Mk,t,M,1);}
   out.push(img);}
  return out;
 }
@@ -155,7 +180,7 @@ function mostrarCortes(){const host=$('cortesHost');host.replaceChildren();const
 function mapasPolares(){
  const out={};for(const f of CARDIACO_FASES){const t=tipoDisponible(f,S.polarTipo),v=t?vol(f,t):null;if(!v||!ejeDefinido(f))return null;const e=S.ejes[f];// La base se muestrea hasta un 12 % del largo antes del plano valvular que marco el alumno, como
  // hace el corte de "base" de los programas clinicos; mas alla solo hay valvula y auricula.
- out[f]={mapa:C.mapaPolar(v.data[0],v.n,v.nz,e.C,marcoDe(e),e.L/2-1,-e.L/2+.12*e.L,v.spacing,{anillos:24,angulos:72,radioMm:Math.max(35,e.L*v.spacing*.6)}),tipo:t};}
+ out[f]={mapa:C.mapaPolar(v.data[0],v.n,v.nz,centroPara(v,f),marcoDe(e),e.L/2-1,-e.L/2+.12*e.L,v.spacing,{anillos:24,angulos:72,radioMm:Math.max(35,e.L*v.spacing*.6)}),tipo:t};}
  return out;
 }
 function paginaPolar(){
@@ -175,9 +200,8 @@ function mostrarPolar(){const host=$('polarHost');host.replaceChildren();const c
  fila(['Segmento','Territorio','Estrés %','Reposo %','Diferencia'],true);for(let s=1;s<=17;s++){const a=S.polar.estres.porSegmento[s],b=S.polar.reposo.porSegmento[s];fila([s+' · '+C.NOMBRE_SEGMENTO[s],C.TERRITORIO[s],a??'—',b??'—',(a!=null&&b!=null)?(b-a>0?'+':'')+(b-a):'—']);}
  fila(['Extensión bajo '+Math.round(S.polarUmbral*100)+' %','',C.fmt(S.polar.estres.extension,0)+' %',C.fmt(S.polar.reposo.extension,0)+' %','']);$('polarTabla').replaceChildren(t);}
 /* ---------- gatillado ---------- */
-function centroGated(g,f){const e=S.ejes[f],v=volGuia(f);if(!e.C||!v)return e.C;const dz=(g.posicion&&v.posicion)?(g.posicion[2]-v.posicion[2])/g.dz:0;return [e.C[0],e.C[1],e.C[2]-dz];}
 function pilasGated(f){
- const g=vol(f,'gatillado');if(!g||!ejeDefinido(f))return null;const e=S.ejes[f],Mk=marcoDe(e),Cg=centroGated(g,f),sp=g.spacing,K=Math.max(6,Math.round(e.L+4)),tA=e.L/2+2/sp,tB=-e.L/2;
+ const g=vol(f,'gatillado');if(!g||!ejeDefinido(f))return null;const e=S.ejes[f],Mk=marcoDe(e),Cg=centroPara(g,f),sp=g.spacing,K=Math.max(6,Math.round(e.L+4)),tA=e.L/2+2/sp,tB=-e.L/2;
  return g.data.map(d=>{const sax=[];for(let k=0;k<K;k++){const t=tA-(tA-tB)*k/(K-1);sax.push(C.ejeCorto(d,g.n,g.nz,Cg,Mk,t,M,1));}return {sax,vla:C.ejeLargoVertical(d,g.n,g.nz,Cg,Mk,0,M,1),hla:C.ejeLargoHorizontal(d,g.n,g.nz,Cg,Mk,0,M,1),mid:C.ejeCorto(d,g.n,g.nz,Cg,Mk,0,M,1)};});
 }
 const cacheGated={};
@@ -252,7 +276,7 @@ function pasosTutorial(n,caso){
    deberia:(conCT?'Seis':'Cuatro')+' filas en verde. Si agregas el eje corto del equipo de la carpeta «Referencia equipo», aparece como referencia.',
    ayuda:'Un archivo «no reconocido» es una exportación sin nombre o con otro nombre: vuelve a SPECT Lab 95 y exporta con el nombre exacto. Las proyecciones crudas no van aquí.',
    completo:()=>S.vols.length>0&&!faltantes().length&&!problemasCarga().length,problemas:()=>problemasCarga(),
-   detalle:()=>S.vols.filter(v=>v.rec&&v.rec.tipo!=='referencia').map(v=>CARDIACO_NOMBRE_FASE[v.rec.fase]+' '+v.rec.tipo).join(' · ')},
+   detalle:()=>[S.vols.filter(v=>v.rec&&v.rec.tipo!=='referencia'&&vol(v.rec.fase,v.rec.tipo)===v).map(v=>CARDIACO_NOMBRE_FASE[v.rec.fase]+' '+v.rec.tipo).join(' · ')].concat(avisosCarga()).join(' ')},
   pasoEje('estres'),pasoEje('reposo'),
   {titulo:'Página de cortes'+(conCT?' sin AC y con AC':''),pantalla:2,resaltar:'panelCortes',
    texto:'La página muestra estrés arriba y reposo abajo en cada tipo de corte, con los ángulos que definiste por fase. '+(conCT?'Alterna «Con AC» y «Sin AC» en el panel y mira la pared inferior.':'Este caso solo tiene la reconstrucción sin AC.'),
@@ -291,11 +315,14 @@ function cierreTutorial(n,caso){
  const imp=document.createElement('details');imp.open=true;imp.append(Object.assign(document.createElement('summary'),{textContent:'Impresión del informe'}));imp.append(Object.assign(document.createElement('p'),{textContent:ref.impresion}));box.append(imp);
  return box;
 }
-function copiarEje(){const f=S.ejeFase,o=f==='estres'?'reposo':'estres',src=S.ejes[o];if(!ejeDefinido(o)){estado('La otra fase no tiene eje definido.');return;}const dst=S.ejes[f];dst.az=src.az;dst.el=src.el;dst.L=src.L;const v=volGuia(f),vo=volGuia(o);dst.C=src.C.slice();if(v&&vo&&v.posicion&&vo.posicion)dst.C[2]-=(v.posicion[2]-vo.posicion[2])/v.dz;dst.axial=[];dst.vla=[];invalidar();estado('Ángulos copiados de la fase '+CARDIACO_NOMBRE_FASE[o]+'. Revisa el resultado: cada fase se adquirió por separado.');refrescar();}
+function copiarEje(){const f=S.ejeFase,o=f==='estres'?'reposo':'estres',src=S.ejes[o];if(!ejeDefinido(o)){estado('La otra fase no tiene eje definido.');return;}const dst=S.ejes[f];dst.az=src.az;dst.el=src.el;dst.L=src.L;const v=volGuia(f);dst.C=src.C.slice();dst.origenZ=src.origenZ;dst.dz=src.dz;if(v&&v.posicion&&src.origenZ!==null){dst.C[2]-=(v.posicion[2]-src.origenZ)/(v.dz||1);dst.origenZ=v.posicion[2];dst.dz=v.dz;}dst.plano={az:dst.az,C:dst.C.slice()};dst.axial=[];dst.vla=[];invalidar();estado('Ángulos copiados de la fase '+CARDIACO_NOMBRE_FASE[o]+'. Revisa el resultado: cada fase se adquirió por separado.');refrescar();}
 /* ---------- arranque ---------- */
 function iniciar(){
  tutorial=RenalTutorial.crear({contenedor:$('tutorial'),workspace:$('workspace'),boton:$('tutorialBoton'),titulo:'Tutorial cardíaco',clave:'cardiacoTutorial',casos:CARDIACO_CASOS,pasos:pasosTutorial,cierre:cierreTutorial,preguntasOrales:CARDIACO_PREGUNTAS_ORALES,
-  onCaso:n=>{S.caso=n;for(const v of S.vols)v.rec=reconocer(v);refrescar();},navegar:i=>{if(i!==S.paso&&S.vols.length)navegar(i);}});
+  onCaso:n=>{S.caso=n;for(const v of S.vols)v.rec=reconocer(v);refrescar();},
+  // El tutorial pide ir a la pantalla del paso pendiente en cada redibujo. Se obedece una sola
+  // vez por cambio de paso: si el alumno se mueve a otra pantalla, no se le arrastra de vuelta.
+  navegar:i=>{if(i===ultimaPantallaTutorial)return;ultimaPantallaTutorial=i;if(i!==S.paso&&S.vols.length)navegar(i);}});
  S.caso=tutorial.caso;
  $('archivos').onchange=e=>cargar([...e.target.files]);$('carpeta').onchange=e=>cargar([...e.target.files].filter(f=>!/\.(png|pdf|txt)$/i.test(f.name)));
  $('paleta').onchange=e=>{S.paleta=e.target.value;refrescar();};$('techo').oninput=e=>{S.techo=Number(e.target.value)/100;$('techoValor').textContent=e.target.value+' %';refrescar();};
@@ -321,6 +348,9 @@ function iniciar(){
 }
 function invalidarGated(){for(const k of Object.keys(cacheGated))delete cacheGated[k];S.exportados.gated=false;}
 window.CardiacoApp={estado:S,cargar,vol,ejeDefinido,problemasEje,problemasCarga,paginaCortes,paginaPolar,paginaGated,datosGated,fevi,elegirPorVolumen,navegar,exportarPng,refrescar,get tutorial(){return tutorial;},
- buscarVentriculo:(f,az,el,tipo)=>{const v=tipo?vol(f,tipo):volGuia(f);if(!v)return null;const b=C.buscarVentriculo(v.data[0],v.n,v.nz,C.marco(az,el),v.spacing);if(b&&tipo&&v!==volGuia(f)){const g=volGuia(f);if(g&&g.posicion&&v.posicion)b.C[2]-=(g.posicion[2]-v.posicion[2])/g.dz;}return b;},definirEje:(f,az,el,Cv,L)=>{const e=S.ejes[f];e.az=az;e.el=el;e.C=Cv;e.L=L;e.axial=[[0,0,0],[1,1,0]];e.vla=[[0,0],[1,1]];invalidar();refrescar();}};
+ buscarVentriculo:(f,az,el,tipo)=>{const v=tipo?vol(f,tipo):volGuia(f);if(!v)return null;const b=C.buscarVentriculo(v.data[0],v.n,v.nz,C.marco(az,el),v.spacing);if(b&&tipo&&v!==volGuia(f)){const g=volGuia(f);if(g&&g.posicion&&v.posicion)b.C[2]-=(g.posicion[2]-v.posicion[2])/g.dz;}return b;},
+ centroPara,volumenEje,
+ // Para pruebas: el centro Cv viene en el espacio del volumen guia de la fase.
+ definirEje:(f,az,el,Cv,L)=>{const e=S.ejes[f],v=volGuia(f);e.az=az;e.el=el;e.C=Cv;e.L=L;e.origenZ=v&&v.posicion?v.posicion[2]:null;e.dz=v?v.dz:null;e.plano={az,C:Cv.slice()};e.axial=[[0,0,0],[1,1,0]];e.vla=[[0,0],[1,1]];invalidar();refrescar();}};
 document.readyState==='loading'?document.addEventListener('DOMContentLoaded',iniciar):iniciar();
 })();
