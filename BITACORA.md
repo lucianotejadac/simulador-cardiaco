@@ -73,6 +73,17 @@ El caso 5 (ventrículo de 700 mL, FEVI de 7 %) queda dentro de tolerancia en FEV
 - Sin CT, «Siguiente» en el paso 2 pedía un CT y no dejaba avanzar: ahora pasa directo a la OSEM de referencia.
 - Un centroide global como medida de movimiento saltaba entre corazón e hígado (5 cm falsos); el corrimiento entre vistas vecinas da 1 vóxel en las adquisiciones quietas.
 
+### 7. Segunda revisión: lo que el simulador contaba antes de tiempo
+
+**Contexto.** El docente preguntó si las cuarenta preguntas se podían responder con lo que el simulador muestra, y pidió analizar de nuevo. La segunda pasada encontró que varias ya estaban respondidas antes de procesar nada, en contra de la decisión de revelar el informe al final.
+
+**Hallazgos.**
+- Cinco de los seis títulos decían el diagnóstico. Las particularidades y las guías por fase adelantaban la trampa del caso 2, el rótulo «AC REST» del caso 3, la normalidad del caso 4, el volumen de 708 mL y la FEVI de 7 % del caso 5 y la advertencia del informe del caso 6.
+- La copia «QC Corrected» es idéntica a la cruda en tres casos y difiere por corrimientos menores de un vóxel en los casos 4 y 5; el comparador solo buscaba corrimientos enteros y habría dicho «no movió nada» en esos dos. La pauta oral pedía comparar el sinograma corregido, que el panel no mostraba.
+- Tres preguntas piden las cuentas por intervalo gatillado y no se mostraban.
+
+**Decisiones.** Títulos técnicos en los seis casos. Las pistas diagnósticas pasan a un campo `reveladas` del manifiesto que la segunda parte muestra en el cierre bajo «Lo que el tutorial no te dijo antes». El comparador de la copia corregida distingue idéntica, remuestreada bajo un vóxel y desplazada, y una casilla permite ver la copia en el cine, el sinograma y la suma. El bloque gatillado informa cuentas por intervalo y por vista y la fracción respecto a la cruda. El paso del CT ya no avisa el rótulo del caso 3: lo explica en su detalle después de aceptarlo, porque lo que decide es el marco de referencia, y la pregunta del error de registro de diez milímetros dice cómo comprobarlo.
+
 ### Pendientes y advertencias
 
 - Las descripciones de serie del equipo se conservan tal cual, incluido el CT «AC REST» del estrés del caso 3: es material didáctico, no un error de la entrega.

@@ -38,7 +38,7 @@ function cardiacoReconoceNombre(descripcion,caso,fase,tipo){
 // Preguntas sobre el procesamiento, comunes a los casos: se discuten con la primera parte hecha.
 const CARDIACO_PREGUNTAS_PROCESO=[
  'Las dos OSEM de una fase, sin AC y con AC, salen de las mismas proyecciones. ¿En qué pared cambió más la intensidad relativa y por qué justamente ahí? Relaciónalo con lo que atraviesan los fotones desde la pared inferior.',
- 'El registro SPECT/CT lo hiciste a mano. Si hubieras dejado 10 mm de error hacia la izquierda del paciente, ¿qué pared se habría corregido de más y cuál de menos? ¿Cómo se ve eso en el mapa polar?',
+ 'El registro SPECT/CT lo hiciste a mano. Si hubieras dejado 10 mm de error hacia la izquierda del paciente, ¿qué pared se habría corregido de más y cuál de menos? ¿Cómo se ve eso en el mapa polar? Puedes comprobarlo: vuelve al paso 2, deja el CT corrido 10 mm a propósito, confirma el registro y reconstruye con AC otra vez; el historial conserva las dos.',
  'El CT de atenuación cubre unos 15 a 24 cm en el eje del paciente y el SPECT 42 cm. ¿Por qué el equipo no adquiere más CT, y qué pasa con los cortes del SPECT que quedan fuera?',
  'La FBP con filtro rampa muestra la pared inferior más apagada que la OSEM con AC, y también más ruido. Separa las dos causas: qué se debe al algoritmo y qué a la atenuación.',
  'El gatillado reparte las mismas cuentas en 8 intervalos. ¿Cuántas cuentas por vista te quedaron en cada intervalo respecto a la adquisición no gatillada, y qué consecuencia tiene eso para la reconstrucción y para el filtro que aplicaste?'
@@ -50,7 +50,7 @@ const CARDIACO_PREGUNTAS_ORALES=[
   preparar:'Usa el antecedente y el procedimiento del caso, y los segundos por vista y las cuentas que leíste en el control de calidad de cada fase.'},
  {titulo:'Adquisición y control de calidad',segundos:120,
   pregunta:'Describe la órbita (dos cabezales a 90°, 32 pasos de 2,8°, 180°), las dos ventanas de energía y lo que viste en el cine y el sinograma: ¿hubo movimiento, actividad extracardíaca, cuentas suficientes? ¿Qué hizo la copia «QC Corrected» del equipo?',
-  preparar:'Anota el desplazamiento máximo que midió el simulador y compara el sinograma crudo con el corregido.'},
+  preparar:'Anota lo que midió el simulador en la cruda y, con la copia corregida cargada, usa la casilla «ver la copia corregida» para comparar su cine y su sinograma con los de la cruda.'},
  {titulo:'Reconstrucción y corrección de atenuación',segundos:120,
   pregunta:'Explica por qué reconstruiste con OSEM y no con FBP, qué hace el mapa μ y cómo registraste el CT. Muestra en tus cortes la diferencia entre la reconstrucción sin AC y con AC, y di cuál elegiste para leer la perfusión y por qué.',
   preparar:'Ten a mano las dos páginas de cortes (sin AC y con AC) y el residuo del registro que informó el simulador.'},
@@ -63,8 +63,8 @@ const CARDIACO_PREGUNTAS_ORALES=[
 ];
 const CARDIACO_CASOS={
  1:{
-  titulo:'Infarto lateral con isquemia septal',
-  resumen:'Estrés con dipiridamol de un día. Sin reconstrucciones del equipo: aquí todo lo haces tú.',
+  titulo:'Dipiridamol de un día; estrés de 9 mCi',
+  resumen:'Un día, estrés de baja dosis primero. Sin reconstrucciones del equipo: aquí todo lo haces tú.',
   clinica:{
    antecedentes:'59 años. Cardiopatía coronaria en estudio. Infarto al miocardio en 2009. Hipertensión, diabetes tipo 2, dislipidemia, EPOC, enfermedad renal crónica, tromboembolismo pulmonar recurrente, obesidad severa, apnea del sueño severa, amputación transmetatarsiana izquierda.',
    procedimiento:'Tc-99m sestamibi: 9,16 mCi en estrés farmacológico con dipiridamol y 36,5 mCi en reposo, protocolo de un día. Gatillado con ECG en ambas fases. CT de baja dosis para corrección de atenuación. Comparación con base de datos normales (Cedars). Informe de la fase de estrés: sin evidencias de isquemia.'
@@ -93,16 +93,19 @@ const CARDIACO_CASOS={
    impresion:'Defecto de perfusión lateral de 15 % de extensión con 5 % de isquemia apical, compatible con infarto y leve isquemia periinfarto. Defecto septal apical y medio de 10 % que revierte completamente en reposo, compatible con isquemia. Función ventricular izquierda global y segmentaria dentro de límites normales.'}
  },
  2:{
-  titulo:'Isquemia inferolateral; la AC se descartó por el intestino',
-  resumen:'Esfuerzo físico en un paciente de 81 años con bypass. El informe leyó las imágenes sin AC.',
+  titulo:'Esfuerzo físico con bypass; todas las referencias del equipo',
+  resumen:'Esfuerzo físico submáximo en un paciente de 81 años con bypass. Trae CT en las dos matrices y todas las reconstrucciones del equipo.',
   clinica:{
    antecedentes:'81 años. Hipertensión. Doble bypass coronario en 2022. Dislipidemia. Tabaquismo suspendido hace 40 años.',
    procedimiento:'Tc-99m sestamibi: 16,4 mCi en estrés con esfuerzo físico (protocolo de Bruce, 3 min 39 s, 2,5 METs, 91 % de la frecuencia cardíaca máxima teórica) y 30,8 mCi en reposo. Gatillado con ECG en ambas fases. CT de baja dosis para corrección de atenuación. Comparación con base de datos normales (Cedars). Prueba de esfuerzo submáxima negativa para isquemia, capacidad funcional disminuida.'
   },
   particularidades:[
-   'El informe usó las imágenes sin corrección de atenuación: en reposo había actividad intestinal pegada a la pared inferior y la AC la exageraba. Tu tarea incluye decidir lo mismo con tus propias reconstrucciones.',
    'Estrés físico submáximo: menos flujo diferencial que con un vasodilatador.',
-   'Este caso trae todas las referencias del equipo: transversal, eje corto sin y con AC, y gatillado reconstruido.'
+   'Este caso trae todas las referencias del equipo: transversal, eje corto sin y con AC, y gatillado reconstruido.',
+   'Vas a tener que decidir con cuál reconstrucción informas, sin AC o con AC. Mira con atención qué hay debajo de la pared inferior antes de decidir.'
+  ],
+  reveladas:[
+   'El informe usó las imágenes sin corrección de atenuación: en reposo había actividad intestinal pegada a la pared inferior y la AC la exageraba.'
   ],
   preguntas:[
    '¿Por qué la actividad intestinal altera más la imagen con corrección de atenuación que la imagen sin corregir? Piensa en qué hace la AC con las cuentas cercanas a la pared inferior.',
@@ -115,7 +118,7 @@ const CARDIACO_CASOS={
    estres:{marco:'663395c5',segundosPorVista:25.8,qc:true,ct:{'CT 512':49,'CT 128':74},eje:{azimut:40.4,elevacion:10.6},
     guia:'Mira el cine con calma: la actividad subdiafragmática (hígado e intestino) está justo debajo del corazón. Compara con la copia «QC Corrected».'},
    reposo:{marco:'8da18c01',segundosPorVista:20.6,qc:true,ct:{'CT 512':44,'CT 128':66},eje:{azimut:48.4,elevacion:13.6},
-    guia:'Aquí está la trampa del caso: actividad intestinal pegada a la pared inferior. Fíjate cómo cambia esa pared entre la OSEM sin AC y con AC.'}
+    guia:'Reposo de alta dosis. Recorre el cine mirando qué hay debajo del corazón y después compara la pared inferior entre la OSEM sin AC y con AC, corte a corte.'}
   },
   referencia:{extension:{estres:10,reposo:0},qps:null,fevi:{estres:67,reposo:68},vfd:{estres:55,reposo:68},tid:0.8,sds:5,
    hallazgos:'Cavidad ventricular izquierda de tamaño conservado en ambas fases, sin dilatación post estrés. LHR 0,36. En las imágenes sin corrección de atenuación, defecto de perfusión de leve a moderada intensidad inferolateral apical, medio y basal, de aproximadamente 10 % del ventrículo, con reversibilidad completa en reposo (SSS 6, SRS 1, SDS 5). Las imágenes con corrección de atenuación presentan actividad extracardíaca intestinal en reposo que altera la cuantificación, por lo que no se consideraron. Leve a moderada hipoquinesia septal en ambas fases, con leve disminución del engrosamiento inferoseptal medio basal.',
@@ -130,8 +133,11 @@ const CARDIACO_CASOS={
   },
   particularidades:[
    'El estrés se adquirió una semana después del reposo, con 17 s por vista en vez de 25: menos tiempo, menos cuentas.',
-   'El CT de la fase de estrés está rotulado «AC REST» por el equipo. Es un error de rotulación real: su marco de referencia demuestra que pertenece al estrés. Solo hay CT de 512 en esa fase.',
-   'La fase de estrés no tiene copia «QC Corrected» ni reconstrucciones del equipo; el reposo sí.',
+   'La fase de estrés solo trae CT de 512 y no tiene copia «QC Corrected» ni reconstrucciones del equipo; el reposo sí.',
+   'Fíjate en cómo vienen rotulados los archivos de cada fase y en qué acepta y qué rechaza el simulador al cargarlos.'
+  ],
+  reveladas:[
+   'El CT de la fase de estrés está rotulado «AC REST» por el equipo. Es un error de rotulación real: su marco de referencia demuestra que pertenece al estrés, y por eso el simulador lo aceptó.',
    'Con bloqueo de rama izquierda, el septo puede verse hipoperfundido sin enfermedad coronaria, sobre todo con estrés físico. Por eso el estrés fue farmacológico.'
   ],
   preguntas:[
@@ -143,7 +149,7 @@ const CARDIACO_CASOS={
   ],
   fases:{
    estres:{marco:'94c6c6d3',segundosPorVista:18.5,qc:false,ct:{'CT 512':37},eje:null,
-    guia:'17 s por vista: proyecciones más ruidosas. No hay copia corregida del equipo. Y el CT se llama «AC REST»: cárgalo igual, es el de esta fase.'},
+    guia:'17 s por vista: proyecciones más ruidosas. No hay copia corregida del equipo: el movimiento lo juzgas tú. El CT de esta fase es el de su propia carpeta, con el nombre que traiga.'},
    reposo:{marco:'5237cb67',segundosPorVista:15.6,qc:true,ct:{'CT 512':31,'CT 128':46},eje:{azimut:19.5,elevacion:6.4},
     guia:'Reposo con 31 mCi y 15 s por vista. Compara tu eje corto con el del equipo, que en este caso viene en la carpeta de referencia.'}
   },
@@ -152,16 +158,19 @@ const CARDIACO_CASOS={
    impresion:'Leve isquemia apical de 5 % del ventrículo izquierdo. Alteración de perfusión anteroseptal determinada por alteración de conducción tipo bloqueo completo de rama izquierda. Función global conservada, con hipoquinesia anteroseptal.'}
  },
  4:{
-  titulo:'Perfusión normal con bloqueo de rama',
-  resumen:'Esfuerzo físico, protocolo de un día. El estudio negativo también se procesa completo.',
+  titulo:'Esfuerzo físico de un día con bloqueo de rama',
+  resumen:'Esfuerzo físico, protocolo de un día, prueba indeterminada por el bloqueo. Se procesa completo, sea lo que sea que muestre.',
   clinica:{
    antecedentes:'62 años. Sospecha de cardiopatía coronaria. Hipertensión arterial, tabaquismo suspendido. Prueba de esfuerzo: frecuencia máxima 85 % del teórico, sin angina, indeterminada por bloqueo completo de rama izquierda con el alza de frecuencia; capacidad funcional I.',
    procedimiento:'Tc-99m sestamibi: 9,97 mCi en esfuerzo (protocolo de Bruce) y 29,71 mCi en reposo, protocolo de un día. Gatillado con ECG en ambas fases. Corrección de atenuación con CT de baja dosis. Procesado con Cedars QGS-QPS.'
   },
   particularidades:[
    'El reposo se adquirió dos veces; se entrega el que el equipo procesó.',
-   'Estudio normal: el objetivo es demostrar que no hay defecto, con la misma rigurosidad que si lo hubiera.',
-   'Bloqueo de rama izquierda con estrés físico: es justo la situación en que un defecto septal puede ser falso. Aquí no apareció.'
+   'Bloqueo de rama izquierda con estrés físico: revisa el septo con especial cuidado y decide si lo que ves es perfusión o conducción.'
+  ],
+  reveladas:[
+   'El estudio es normal: el objetivo era demostrar que no hay defecto, con la misma rigurosidad que si lo hubiera.',
+   'Con bloqueo de rama izquierda y esfuerzo físico puede aparecer un defecto septal falso. Aquí no apareció.'
   ],
   preguntas:[
    '¿Cómo se demuestra que una perfusión es normal? Enumera qué miraste en los tres ejes y en el mapa polar antes de afirmarlo.',
@@ -174,24 +183,27 @@ const CARDIACO_CASOS={
    estres:{marco:'c875c4e8',segundosPorVista:25.8,qc:true,ct:{'CT 512':33,'CT 128':50},eje:{azimut:25.4,elevacion:13.4},
     guia:'Estrés de baja dosis con esfuerzo físico. Fíjate en la relación corazón/hígado: con esfuerzo el hígado capta menos que con vasodilatador.'},
    reposo:{marco:'82f8b8a8',segundosPorVista:20.8,qc:true,ct:{'CT 512':31,'CT 128':46},eje:{azimut:24.4,elevacion:15.4},
-    guia:'Reposo de alta dosis. Un corazón normal: úsalo para aprender cómo se ve la pared inferior antes y después de la AC.'}
+    guia:'Reposo de alta dosis. Compara la pared inferior antes y después de la AC y anota cuánto cambia.'}
   },
   referencia:{extension:{estres:0,reposo:0},qps:{estres:0,reposo:0},fevi:{estres:68,reposo:59},vfd:{estres:93,reposo:95},tid:0.87,sds:1,
    hallazgos:'Cavidad ventricular izquierda de volumen normal. Perfusión miocárdica conservada en estrés y reposo. Contractilidad global y segmentaria normal en ambas fases.',
    impresion:'SPECT de perfusión miocárdica sin evidencias de insuficiencia del riego coronario. Función sistólica ventricular izquierda conservada.'}
  },
  5:{
-  titulo:'Miocardiopatía dilatada: la cuantificación automática falla',
-  resumen:'Ventrículo de 700 mL y fracción de eyección de 7 %. QPS y QGS pidieron contornos manuales.',
+  titulo:'Dipiridamol de dos días; el equipo pidió contornos manuales',
+  resumen:'Dos días, reposo tres días antes del estrés. QPS y QGS marcaron falla de máscara y el equipo corrigió los contornos a mano.',
   clinica:{
    antecedentes:'68 años. Hipertensión esencial. Refiere cardiomegalia y bloqueo completo de rama izquierda. Dislipidemia. Nicturia.',
    procedimiento:'Tc-99m sestamibi, protocolo de dos días: reposo con 25 mCi; estrés farmacológico con dipiridamol (0,57 mg/kg) con 25 mCi tres días después. Gatillado con ECG en ambas fases. CT de baja dosis para corrección de atenuación. Comparación con base de datos Cedars.'
   },
   particularidades:[
-   'El ventrículo izquierdo está severamente dilatado (VFD 708 mL). Los contornos automáticos de QPS y QGS fallaron («Mask Failure») y el equipo los corrigió a mano. Tu isocontorno de cavidad también va a sufrir.',
-   'La captación es marcadamente heterogénea en todas las paredes: distingue heterogeneidad difusa de defecto segmentario.',
-   'Este caso trae dos series remuestreadas de CT por fase en el equipo; se entrega la última.',
-   'FEVI de 7 % en estrés y 10 % en reposo: en el cine gatillado casi no verás engrosamiento.'
+   'Los contornos automáticos de QPS y QGS fallaron («Mask Failure») y el equipo los corrigió a mano. Piensa por qué mientras marcas tu eje y tu cavidad.',
+   'El buscador de anillo normal puede no bastar aquí: si el eje corto no parece un anillo, ajusta el techo de la escala y el largo del eje.',
+   'Este caso trae dos series remuestreadas de CT por fase en el equipo; se entrega la última.'
+  ],
+  reveladas:[
+   'El ventrículo izquierdo está severamente dilatado, con VFD de 708 mL, y la captación es marcadamente heterogénea en todas las paredes.',
+   'FEVI de 7 % en estrés y 10 % en reposo: por eso en el cine gatillado casi no se ve engrosamiento.'
   ],
   preguntas:[
    '¿Por qué fallan los algoritmos de contorno automático en un ventrículo muy dilatado y de paredes delgadas? ¿Qué supuestos geométricos usan?',
@@ -202,7 +214,7 @@ const CARDIACO_CASOS={
   ],
   fases:{
    estres:{marco:'98f47a47',segundosPorVista:25.9,qc:true,ct:{'CT 512':38,'CT 128':57},eje:{azimut:46.4,elevacion:3.6},
-    guia:'El corazón es enorme y las paredes finas. En el cine se ve una bola grande con poco contraste. Baja el techo de la escala para ver las paredes.'},
+    guia:'Mide el corazón a ojo en el cine antes de reconstruir y compáralo con los otros órganos. Baja el techo de la escala si las paredes se ven tenues.'},
    reposo:{marco:'b56599b0',segundosPorVista:20.7,qc:true,ct:{'CT 512':40,'CT 128':60},eje:{azimut:49.4,elevacion:3.6},
     guia:'Reposo adquirido tres días antes del estrés. El eje largo está casi horizontal (elevación de unos 4°): marca con cuidado el eje en el largo vertical.'}
   },
@@ -211,7 +223,7 @@ const CARDIACO_CASOS={
    impresion:'Marcada heterogeneidad de captación en el ventrículo izquierdo, probablemente por miocardiopatía dilatada. En ese contexto, defecto reversible apical y lateroapical de aproximadamente 8 % que podría corresponder a una pequeña isquemia. Defecto lateral e inferior sin variaciones. Severa hipoquinesia difusa con disquinesia septal y severa disfunción ventricular en ambas fases.'}
  },
  6:{
-  titulo:'Infarto inferior con isquemia residual, sin CT',
+  titulo:'Dipiridamol de un día, sin CT en la exportación',
   resumen:'Caso de reserva. La exportación no trae CT: la primera parte termina en la OSEM sin corrección de atenuación.',
   clinica:{
    antecedentes:'74 años. Dolor torácico en estudio. Hipertensión arterial, diabetes mellitus, dislipidemia.',
@@ -220,6 +232,9 @@ const CARDIACO_CASOS={
   particularidades:[
    'No hay CT en la exportación: no puedes registrar ni corregir atenuación. La primera parte termina con la OSEM sin AC y el gatillado; en la segunda parte trabajas solo con esos volúmenes.',
    'Tampoco hay copias «QC Corrected» ni reconstrucción transversal del equipo, pero sí varios intentos de eje corto: se entrega el último.',
+   'Sin AC, la pared inferior siempre se ve más apagada. Tendrás que argumentar cuánto de lo que ves es atenuación y cuánto no, sin poder corregirla.'
+  ],
+  reveladas:[
    'El informe advierte que en reposo la perfusión inferior anteroapical está sobreestimada por actividad extracardíaca.'
   ],
   preguntas:[
@@ -231,7 +246,7 @@ const CARDIACO_CASOS={
   ],
   fases:{
    estres:{marco:'7fb58483',segundosPorVista:25.9,qc:false,ct:{},eje:{azimut:28.4,elevacion:13.5},
-    guia:'Sin CT ni copia corregida. Juzga el movimiento en el cine y el sinograma. La pared inferior se verá apagada: parte es atenuación, parte es infarto.'},
+    guia:'Sin CT ni copia corregida. Juzga el movimiento en el cine y el sinograma, y fíjate en la actividad subdiafragmática de las dos fases.'},
    reposo:{marco:'b2b87b49',segundosPorVista:20.9,qc:false,ct:{},eje:{azimut:37.4,elevacion:15.5},
     guia:'Reposo de alta dosis. Mira la actividad subdiafragmática: el informe dice que sobreestima la perfusión inferior.'}
   },
