@@ -1,0 +1,92 @@
+/* Estilo Windows 95 compartido por los simuladores renales. Derivado de SPECT Lab 95. */
+:root{font-family:Tahoma,'MS Sans Serif',Arial,sans-serif;font-size:13px;color:#000;background:#008080;color-scheme:light}
+*{box-sizing:border-box}body{margin:0;padding:6px 6px 44px}
+button,input,select{font:inherit;color:#000}
+button{background:#c0c0c0;border:2px solid;border-color:#fff #404040 #404040 #fff;box-shadow:1px 1px #000;padding:4px 10px;cursor:pointer;min-height:26px}
+button:active{border-color:#404040 #fff #fff #404040;box-shadow:none;transform:translate(1px,1px)}
+button:disabled{color:#777;text-shadow:1px 1px white;cursor:default}
+button[aria-pressed=true]{font-weight:bold;background:#fff;border-color:#404040 #fff #fff #404040;box-shadow:none}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:1px dotted #000;outline-offset:3px}
+input[type=number],input[type=text],select{background:white;border:2px solid;border-color:#808080 #fff #fff #808080;padding:3px}
+input[type=number]{width:70px}input[type=range]{accent-color:#808080;width:130px;vertical-align:middle}
+h1{font-size:18px;margin:4px 0 8px}h2{font-size:14px;margin:8px 0 4px}h3{font-size:13px;margin:8px 0 4px}p{line-height:1.45;margin:5px 0}
+.window{max-width:none;margin:auto;background:#c0c0c0;padding:3px;border:2px solid;border-color:#fff #404040 #404040 #fff;box-shadow:2px 2px #000;min-height:calc(100dvh - 52px);display:flex;flex-direction:column}
+.titlebar{background:linear-gradient(90deg,#000080,#1084d0);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:4px 7px;font-weight:bold}
+.captionbuttons{color:#000;background:#c0c0c0;border:1px outset #fff;letter-spacing:8px;padding-left:6px}
+.menubar{display:flex;gap:3px;align-items:center;flex-wrap:wrap;padding:3px 1px;border-bottom:1px solid #808080}
+.menubar button{box-shadow:none;border-color:transparent;padding:3px 8px}.menubar button:hover{border-color:#fff #808080 #808080 #fff}
+.menubar label{display:flex;align-items:center;gap:5px}.menubar .derecha{margin-left:auto;font-size:11px}
+.steps{display:flex;gap:4px;padding:6px 5px}.steps button{flex:1}
+.steps button.active{font-weight:bold;background:#ddd;border-color:#404040 #fff #fff #404040;box-shadow:none}
+.steps button.hecho::before{content:'✔ ';color:#006400}
+.workspace{display:grid;grid-template-columns:250px minmax(0,1fr);gap:8px;padding:0 5px 5px;flex:1;min-height:0}
+.workspace.conTutorial{grid-template-columns:250px minmax(0,1fr) 340px}
+.workspace.sinLateral{grid-template-columns:minmax(0,1fr)}.workspace.sinLateral.conTutorial{grid-template-columns:minmax(0,1fr) 340px}
+aside{border-right:1px solid #808080;padding-right:6px;overflow:auto;min-height:0}
+article{min-width:0;padding:2px 4px;overflow:auto;min-height:0}
+fieldset{border:2px groove #fff;margin:0 0 8px;padding:6px 8px}legend{padding:0 5px;font-weight:bold}
+label{display:block;margin:4px 0}.fila{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}.fila label{display:flex;align-items:center;gap:5px;margin:2px 0}
+.notice{font-size:11px;color:#444}.inset{border:2px solid;border-color:#808080 #fff #fff #808080;background:#ddd;padding:6px;display:block}
+.explanation{line-height:1.45;padding:8px;margin-top:10px}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.statusbar{display:flex;gap:3px}.statusbar span{border:1px inset #fff;padding:4px;flex:1}.statusbar span:last-child{max-width:130px}
+.taskbar{position:fixed;bottom:0;left:0;right:0;background:#c0c0c0;border-top:2px solid white;padding:3px;display:flex;gap:8px;align-items:center;z-index:20;height:36px}
+.taskbar>button{font-weight:bold}.task{padding:4px 30px 4px 8px;border:2px inset white;background:#ddd}.clock{margin-left:auto;border:2px inset white;padding:4px 10px}
+dialog{background:#c0c0c0;padding:3px;border:2px outset white;max-width:560px;box-shadow:3px 3px #000}dialog>div{padding:15px}dialog::backdrop{background:#0005}
+[hidden]{display:none!important}
+table.tabla{border-collapse:collapse;font-size:12px;background:#fff}table.tabla td,table.tabla th{border:1px solid #808080;padding:4px 8px;text-align:right}table.tabla th{background:#dcdcdc;text-align:center}table.tabla td:first-child,table.tabla th:first-child{text-align:left}
+table.tabla td.mal{color:#8b0000;font-weight:bold}
+/* Area de imagenes. */
+.imagewindow{padding:3px;border:2px outset white;background:#c0c0c0;min-width:0}
+.imagewindow h2{margin:0;background:#808080;color:white;padding:4px 6px;font-size:12px;display:flex;align-items:center;gap:8px}
+.imagewindow h2 span{margin-left:auto;font-weight:normal;font-size:11px}
+.imagewindow canvas{display:block;width:100%;background:#fff;image-rendering:pixelated;margin:3px 0}
+.imagewindow.seleccionada h2{background:#000080}
+.vistas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cuantif{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.lienzoRoi{cursor:crosshair;touch-action:none}
+.lienzoRoi.moviendo{cursor:grabbing}
+.listaArchivos{list-style:none;padding:0;margin:6px 0}.listaArchivos li{padding:5px 8px;margin:3px 0;background:#fff;border:2px solid;border-color:#808080 #fff #fff #808080;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.listaArchivos li strong{min-width:80px}.listaArchivos li .estado{margin-left:auto;font-size:11px}
+.listaArchivos li.problema{background:#ffe8e8}.listaArchivos li.ok{background:#eaf5ea}
+.empty{height:200px;margin-top:10px;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#808080;color:#fff}.empty>div{font-size:50px;color:#c0c0c0}
+.herramientas button{display:block;width:100%;text-align:left;margin:3px 0}
+.herramientas button[aria-pressed=true]{background:#fff}
+.leyenda{display:inline-block;width:12px;height:12px;border:2px solid;vertical-align:middle;margin-right:4px}
+.marcadores button{min-width:36px;font-weight:bold}
+/* Tutorial: tercera columna. */
+.tutorial{background:#c0c0c0;border:2px solid;border-color:#fff #404040 #404040 #fff;padding:6px 8px;overflow:auto;min-height:0;font-size:12px;line-height:1.45}
+.tutorialCabecera{display:flex;align-items:center;justify-content:space-between;gap:6px;background:linear-gradient(90deg,#000080,#1084d0);color:#fff;padding:4px 7px;margin:-6px -8px 8px;font-weight:bold}
+.tutorialMini{padding:1px 6px;min-height:0;font-size:11px}
+.tutorialTitulo{font-weight:bold;margin:4px 0 2px}.tutorialResumen{margin:0 0 8px;color:#333}
+.tutorial details{margin:6px 0;border:1px solid #808080;background:#dcdcdc;padding:4px 7px}.tutorial summary{cursor:pointer;color:navy;font-weight:bold}
+.tutorial h4{margin:8px 0 2px;font-size:12px}.tutorial ul,.tutorial ol{padding-left:18px;margin:4px 0}
+.tutorialNota{font-size:11px;color:#333;border-left:3px solid #808080;padding-left:7px;margin:8px 0}
+.tutorialPasos{list-style:none;padding:0;margin:4px 0}.tutorialPasos li{padding:4px 6px;margin:2px 0;color:#444}
+.tutorialPasos li.hecho{color:#006400}.tutorialPasos li.hecho::before{content:'✔ '}
+.tutorialPasos li.actual{background:#fff;border:2px solid;border-color:#808080 #fff #fff #808080;color:#000;font-weight:bold}
+.tutorialPasos li.actual p,.tutorialPasos li.actual ol,.tutorialPasos li.actual ul{font-weight:normal;margin:6px 0 0}
+.tutorialProblema{color:#8b0000!important;border-left:3px solid #c00;padding-left:7px;font-weight:normal}
+.tutorialDetalle{font-weight:normal;color:#004000;font-size:11px;margin:3px 0 0;border-left:3px solid #006400;padding-left:7px}
+.tutorialHaz{background:#eeeefa;border-left:3px solid navy;padding:4px 8px;margin:6px 0;font-weight:normal}
+.tutorialDeberia{background:#edf4e8;border:1px solid #99a891;padding:4px 8px;margin:6px 0;font-weight:normal}
+.tutorialBotones{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.tutorialBotones button{font-weight:normal;padding:3px 8px;min-height:0}
+.tutorialCasos{display:flex;flex-direction:column;gap:5px;margin:8px 0}.tutorialCasos button{display:flex;gap:8px;align-items:baseline;text-align:left;padding:6px 8px}.tutorialCasos button span{font-weight:normal;font-size:11px}
+.tutorialCierre{margin-top:10px;padding:6px 8px;border:2px solid;border-color:#fff #404040 #404040 #fff;background:#d4d0c8}
+.tutorialCierre table{margin:6px 0}
+.tutorialPreguntas ol{padding-left:18px;margin:4px 0}.tutorialPreguntas li{margin:6px 0}
+.tutorialResaltado{outline:3px solid #ff00ff;outline-offset:2px;animation:tutorialLatido 1.4s ease-in-out infinite}
+@keyframes tutorialLatido{0%,100%{outline-color:#ff00ff}50%{outline-color:#800080}}
+.oralTiempo{font-size:11px;color:#333}
+@media(max-width:1100px){.workspace.conTutorial{grid-template-columns:230px minmax(0,1fr) 280px}.workspace.sinLateral.conTutorial{grid-template-columns:minmax(0,1fr) 280px}}
+@media(max-width:800px){.workspace,.workspace.conTutorial,.workspace.sinLateral.conTutorial{display:flex;flex-direction:column}aside{border:0}.vistas{grid-template-columns:1fr 1fr}.cuantif{grid-template-columns:1fr}.menubar .derecha{display:none}.clock{display:none}}
+
+/* Simulador cardiaco: reorientacion, paginas y cine. */
+.reorientar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.reorientar canvas.lienzo{cursor:crosshair;background:#000;width:100%;aspect-ratio:1;image-rendering:auto}
+.reorientar input[type=range]{width:100%}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}.trio canvas{width:100%;aspect-ratio:1;background:#000;image-rendering:pixelated}
+.pagina{background:#000;padding:4px;overflow:auto}.pagina canvas{max-width:100%;display:block;background:#000}
+#tablaVolumenes{width:100%;font-size:11px}#tablaVolumenes td{text-align:left;padding:2px 4px}#tablaVolumenes td.ok{color:#006400}#tablaVolumenes td.falta{color:#8b0000}
+.listaArchivos li strong{min-width:140px}
+@media(max-width:1000px){.reorientar{grid-template-columns:1fr}}

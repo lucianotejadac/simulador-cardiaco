@@ -1,0 +1,63 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Simulador cardíaco — SPECT de perfusión miocárdica</title><link rel="stylesheet" href="cardiaco.css?v=1"></head><body>
+<main class="window"><header class="titlebar"><span>▦ Simulador cardíaco — SPECT de perfusión miocárdica · segunda parte</span><span class="captionbuttons" aria-hidden="true">▁ ▢</span></header>
+<nav class="menubar"><button id="nuevo">Archivo · Nuevo caso</button><button id="tutorialBoton" aria-pressed="true">Tutorial</button><label>Colores <select id="paleta"><option value="cardiaca">Cardíaca</option><option value="hot">Hot iron</option><option value="gris">Escala de grises</option><option value="grisInv">Gris invertido</option></select></label><label>Techo <input id="techo" type="range" min="30" max="100" value="100"> <output id="techoValor">100 %</output></label><button id="ayuda">Ayuda</button><span class="derecha">Uso educativo · Los DICOM no salen del navegador</span></nav>
+<div class="steps" aria-label="Pasos"><button data-step="0">1. Cargar</button><button data-step="1">2. Reorientar</button><button data-step="2">3. Cortes</button><button data-step="3">4. Mapa polar</button><button data-step="4">5. Gatillado</button></div>
+<div class="workspace" id="workspace">
+<aside id="lateral">
+ <fieldset><legend>Caso de trabajo</legend><strong id="casoNombre">Sin caso</strong><p id="casoInfo" class="notice">Elige el caso en el tutorial y carga los volúmenes exportados de la primera parte.</p></fieldset>
+ <fieldset id="panelVolumenes"><legend>Volúmenes del caso</legend><table class="tabla" id="tablaVolumenes"></table></fieldset>
+ <fieldset id="panelEje" hidden><legend>Eje del ventrículo</legend>
+  <label>Fase <select id="ejeFase"><option value="estres">Estrés</option><option value="reposo">Reposo</option></select></label>
+  <label>Volumen guía <select id="ejeVolumen"></select></label>
+  <p class="notice">1) En la transaxial, clic en el centro de la base del ventrículo izquierdo y luego en el ápex. 2) En el eje largo vertical que aparece, clic de nuevo en base y ápex. Los mismos ángulos se aplican a los volúmenes de la fase.</p>
+  <div class="fila"><label>Azimut <input id="ejeAz" type="number" step="0.5" min="-30" max="90" value="30">°</label><label>Elevación <input id="ejeEl" type="number" step="0.5" min="-30" max="45" value="10">°</label></div>
+  <div class="fila"><button id="ejeCopiar">Copiar a la otra fase</button><button id="ejeBorrar">Borrar marcas</button></div>
+  <p id="ejeInfo" class="notice"></p>
+ </fieldset>
+ <fieldset id="panelCortes" hidden><legend>Página de cortes</legend>
+  <label>Corrección <select id="cortesTipo"><option value="AC">Con AC</option><option value="NoAC">Sin AC</option></select></label>
+  <div class="fila"><label>Ejes cortos <input id="cortesN" type="number" min="6" max="16" value="12"></label><label>Ejes largos <input id="cortesNL" type="number" min="3" max="8" value="6"></label></div>
+  <label>Margen del ápex a la base <input id="cortesMargen" type="range" min="0" max="20" value="6"> <output id="cortesMargenValor">6 mm</output></label>
+  <label><input id="cortesNormalizar" type="checkbox" checked> Normalizar cada fase a su máximo</label>
+  <button id="pngCortes" disabled>Descargar PNG · cortes</button>
+ </fieldset>
+ <fieldset id="panelPolar" hidden><legend>Mapa polar</legend>
+  <label>Corrección <select id="polarTipo"><option value="AC">Con AC</option><option value="NoAC">Sin AC</option></select></label>
+  <label>Umbral de defecto <input id="polarUmbral" type="range" min="30" max="80" value="50"> <output id="polarUmbralValor">50 %</output> del máximo</label>
+  <label><input id="polarNumeros" type="checkbox" checked> Números por segmento</label>
+  <p class="notice">La extensión es la fracción del mapa bajo el umbral. Sin base de datos normal, es una aproximación: compárala con el informe al cerrar y discute la diferencia.</p>
+  <button id="pngPolar" disabled>Descargar PNG · mapa polar</button>
+ </fieldset>
+ <fieldset id="panelGated" hidden><legend>Gatillado</legend>
+  <label>Fase <select id="gatedFase"><option value="estres">Estrés</option><option value="reposo">Reposo</option></select></label>
+  <div class="fila"><button id="gatedPlay">▶ Latir</button><label>Intervalo <input id="gatedT" type="range" min="1" max="8" value="1"> <output id="gatedTValor">1</output></label></div>
+  <label>Umbral de cavidad <input id="gatedUmbral" type="range" min="30" max="80" value="55"> <output id="gatedUmbralValor">55 %</output> del máximo del corte</label>
+  <div class="fila"><label>Fin de diástole <select id="gatedED"></select></label><label>Fin de sístole <select id="gatedES"></select></label><button id="gatedAuto">Elegir por volumen</button></div>
+  <div id="gatedTabla"></div>
+  <p class="notice">Volúmenes por umbral de cavidad en el eje corto: aproximados. La FEVI del informe viene de QGS, con superficies ajustadas; la diferencia se discute, no se corrige.</p>
+  <button id="pngGated" disabled>Descargar PNG · gatillado</button>
+ </fieldset>
+</aside>
+<article>
+ <section id="step0" class="step"><h1>Cargar los volúmenes de la primera parte</h1><p>Selecciona los archivos DICOM que exportaste desde SPECT Lab 95: por fase, la OSEM sin AC, la OSEM con AC (si el caso tiene CT) y el gatillado. Puedes agregar también el eje corto de referencia del equipo, de la carpeta «Referencia equipo».</p>
+  <div class="fila"><label class="filelabel">Archivos <input id="archivos" type="file" multiple></label><label class="filelabel">O carpeta <input id="carpeta" type="file" webkitdirectory multiple></label></div>
+  <ul id="listaArchivos" class="listaArchivos"></ul><p id="cargaInfo" class="notice">Aún no hay archivos.</p>
+  <section id="infoVolumen" hidden><h2>Información del volumen</h2><div id="infoTabla"></div></section>
+ </section>
+ <section id="step1" class="step" hidden><h1>Reorientar al eje del ventrículo</h1><p>Marca el eje largo del ventrículo izquierdo: primero en la transaxial, después en el eje largo vertical. Los tres cortes de la derecha se actualizan con tus ángulos.</p>
+  <div class="reorientar"><section class="imagewindow"><h2>Transaxial <span id="axialInfo"></span></h2><canvas id="axial" class="lienzo" width="512" height="512"></canvas><input id="axialZ" type="range" min="0" max="127" value="64"></section>
+  <section class="imagewindow"><h2>Eje largo vertical (plano de tu eje)</h2><canvas id="vlaMarca" class="lienzo" width="512" height="512"></canvas><p class="notice">Se dibuja con el azimut de la transaxial. Marca base y ápex para fijar la elevación.</p></section>
+  <section class="imagewindow"><h2>Resultado con tus ángulos</h2><div class="trio"><canvas id="prevSax" width="192" height="192"></canvas><canvas id="prevVla" width="192" height="192"></canvas><canvas id="prevHla" width="192" height="192"></canvas></div><p class="notice">Eje corto (centro), largo vertical y largo horizontal. En el eje corto: anterior arriba, septo a la izquierda, lateral a la derecha, inferior abajo.</p></section></div>
+ </section>
+ <section id="step2" class="step" hidden><h1>Página de cortes</h1><p>Estrés arriba y reposo abajo en cada fila: eje corto del ápex a la base, eje largo vertical y eje largo horizontal. Alterna sin AC y con AC en el panel.</p><div id="cortesHost" class="pagina"></div></section>
+ <section id="step3" class="step" hidden><h1>Mapa polar de 17 segmentos</h1><p>Estrés, reposo y reversibilidad (reposo menos estrés), en porcentaje del máximo de cada mapa. Anterior arriba, septo a la izquierda, lateral a la derecha, inferior abajo; el ápex al centro y la base en el anillo externo.</p><div id="polarHost" class="pagina"></div><div id="polarTabla"></div></section>
+ <section id="step4" class="step" hidden><h1>Gatillado: motilidad y volúmenes</h1><p>Cine de los 8 intervalos en eje corto y ejes largos, con el contorno de la cavidad por umbral. Elige fin de diástole y fin de sístole; la tabla muestra el volumen por intervalo y la FEVI aproximada.</p><div id="gatedHost" class="pagina"></div></section>
+ <div id="vacio" class="empty inset"><div>▦</div><strong>Área de imágenes</strong><p>Carga los volúmenes del caso para empezar.</p></div>
+ <footer class="actions"><button id="prev" disabled>◀ Anterior</button><button id="next">Siguiente ▶</button></footer>
+</article>
+<section id="tutorial" class="tutorial" aria-label="Tutorial" hidden></section>
+</div>
+<footer class="statusbar"><span id="status" role="status" aria-live="polite">Listo.</span><span id="posicion">Paso 1 de 5</span></footer></main>
+<footer class="taskbar"><button id="inicio">▦ Inicio</button><span class="task">Simulador cardíaco</span><span class="clock">Laboratorio educativo</span></footer>
+<dialog id="acerca"><header class="titlebar">Acerca del simulador cardíaco</header><div><h2>Segunda parte del SPECT de perfusión miocárdica</h2><p>Carga las OSEM que reconstruiste en SPECT Lab 95, marca el eje del ventrículo izquierdo, arma la página de cortes en los tres ejes, el mapa polar de 17 segmentos y el cine gatillado con volúmenes aproximados, y compara con el informe al terminar.</p><p>Uso docente. No es un programa validado para diagnóstico. Los archivos se leen en tu navegador y no se envían a ningún servidor. Incluye dicom-parser (MIT).</p><button id="cerrarAcerca">Aceptar</button></div></dialog>
+<script src="vendor/dicomParser.min.js"></script><script src="cardiaco-core.js?v=1"></script><script src="renal-tutorial.js?v=1"></script><script src="cardiaco-casos.js?v=1"></script><script src="cardiaco-app.js?v=1"></script></body></html>
