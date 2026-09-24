@@ -98,8 +98,26 @@ El caso 5 (ventrículo de 700 mL, FEVI de 7 %) queda dentro de tolerancia en FEV
 
 **Validación.** Prueba con clics reales en el caso 2: azimut y elevación quedan a menos de 2° del eje del equipo en las dos fases, el eje corto central es un anillo tanto con AC como sin AC, y la referencia del equipo y la 1×1 cargadas junto a los productos no bloquean nada. Los demás simuladores renales y de tiroides comparten el panel de tutorial y el mismo comportamiento de arrastre: no se tocaron.
 
+### 9. La prueba con el mouse en los seis casos: el volumen dependía del largo del eje
+
+**Contexto.** El docente pidió repetir la prueba de clics del caso 2 en todos los casos. Los casos 2, 3, 4 y 6 pasaron enteros; el 1 y el 5 no, y al investigar por qué aparecieron tres problemas que las pruebas anteriores tapaban porque marcaban un eje de 70 mm fijos.
+
+**Lo que falló y por qué.**
+- **Caso 5 (dilatado, VFD 708 mL).** Con un eje de 70 mm la región de búsqueda de la cavidad (radio 0,45 × largo) quedaba dentro de la cavidad y el relleno llenaba el disco entero en todos los intervalos: FEVI 1 %. Cuando la prueba pasó a medir el largo real del ventrículo (110 a 130 mm), los volúmenes de los casos normales se dispararon a 300–1300 mL: el relleno por umbral del corte se escapaba por el plano valvular, donde no hay pared que lo cierre, y sumaba discos enteros en los cortes basales. El volumen medía el largo del eje, no el ventrículo.
+- **Caso 1 estrés (9 mCi).** El buscador de anillos puntuaba «sector más débil menos centro»; con pocas cuentas el ruido hunde siempre algún sector y el anillo verdadero daba negativo, así que se quedaba con un falso anillo del abdomen. Eso afectaba a la transaxial inicial de la segunda parte y, peor, al rango que propone la primera parte para el gatillado: la reconstrucción gatillada del estrés quedó fuera del corazón y ningún eje podía dar una FEVI.
+- **Caso 1 reposo (corazón pequeño, VFD 49 mL).** Con vóxeles de 3,3 mm la cavidad se cierra en sístole por volumen parcial y la FEVI por umbral sale de 85 a 98 % contra 68 % del informe.
+
+**Decisiones.**
+- **Cavidad por rayos en vez de relleno.** En cada corte de eje corto se lanzan 72 rayos desde el centro; la pared es el primer máximo del rayo (se deja de buscar cuando la cuenta cae bajo el 70 % del máximo visto, para que el hígado detrás de la pared inferior no la reemplace) y el borde endocárdico es el primer punto que alcanza umbral × pared. Un rayo sin pared (máximo bajo el 30 % del percentil 99,5 de la pila) toma el radio medio de los demás; un corte con más de la mitad de los rayos sin pared no tiene cavidad y, si está en la mitad basal, cierra la cuenta hacia la base. El volumen ya no puede escaparse ni depende de cuánto más allá de la base quedó el clic. La tabla del gatillado informa los «cortes sin pared» y avisa si son muchos.
+- **Umbral por defecto 75 % de la pared del rayo** (antes 55 % del máximo del corte). Con el barrido de 50 a 80 % en los seis casos, 75 % deja la FEVI a menos de 10 puntos del informe en los casos 1, 2, 3 y 6 y los volúmenes a menos de 30 mL, salvo el caso 5, donde subestima (530 contra 708 mL): es justamente lo que su pregunta 3 pide discutir.
+- **Buscador de anillos con el promedio de los tres sectores más débiles** en las dos partes (`buscarVentriculo` y `buscarVentriculoFbp`). Encuentra el corazón del caso 1 estrés y no cambia el resultado en los otros casos. Los productos del caso 1 se regeneraron con la primera parte corregida: el rango propuesto para el gatillado del estrés pasó de los cortes 1–33 a los 25–54, y ahí sí hay corazón.
+- **Revelada nueva en el caso 1** sobre el corazón pequeño y la sobreestimación de la FEVI, para que el alumno no lo lea como un error de eje.
+
+**Validación.** Prueba de clics en los seis casos con el largo del ventrículo medido en la imagen: azimut y elevación a menos de 1° del eje del equipo en las diez fases con referencia, anillo en el eje corto central con AC y sin AC (8–12 % en el estrés del caso 1, que es ruidoso; 16–40 % en el resto), FEVI estrés/reposo 90/78 (informe 80/68) en el caso 1, 72/69 (67/68) en el 2, 67/66 (61/65) en el 3, 79/72 (68/59) en el 4, 19/14 (7/10) en el 5 y 62/54 (61/57) en el 6; VFD a menos de 30 mL del informe salvo el caso 5 (536/514 contra 708/655) y el estrés del caso 6 (105 contra 59, porque la prueba marcó un eje de 130 mm que se pasa de la base: 9 cortes sin pared, y el aviso nuevo lo señala). Los productos de la primera parte del caso 1 se regeneraron y verificaron; los de los demás casos no cambiaron.
+
 ### Pendientes y advertencias
 
 - Las descripciones de serie del equipo se conservan tal cual, incluido el CT «AC REST» del estrés del caso 3: es material didáctico, no un error de la entrega.
-- El caso 1 no tiene reconstrucciones del equipo ni eje de referencia: la reorientación no se compara con nada.
+- El caso 1 no tiene reconstrucciones del equipo ni eje de referencia para el estrés: la reorientación de esa fase se compara con el eje de reposo.
+- La primera parte solo comprueba que el rango propuesto para el gatillado tenga un ancho razonable, no que contenga el corazón: la coronal que el alumno revisa es la única defensa. Convendría avisar si el anillo queda fuera del rango elegido.
 - Nada se ha subido a U-Cursos: el docente pidió esperar.

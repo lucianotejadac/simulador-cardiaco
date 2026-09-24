@@ -9,7 +9,7 @@ const S={caso:null,vols:[],ignorados:[],seleccion:null,paleta:'cardiaca',techo:1
  ejes:{estres:nuevoEje(),reposo:nuevoEje()},ejeFase:'estres',ejeVolumenHash:null,axialZ:null,
  cortesTipo:'AC',cortesN:12,cortesNL:6,margenMm:6,normalizar:true,
  polarTipo:'AC',polarUmbral:.5,polarNumeros:true,polar:{},
- gatedFase:'estres',gatedT:1,gatedUmbral:.55,gated:{estres:{ED:null,ES:null,vol:[]},reposo:{ED:null,ES:null,vol:[]}},
+ gatedFase:'estres',gatedT:1,gatedUmbral:.75,gated:{estres:{ED:null,ES:null,vol:[]},reposo:{ED:null,ES:null,vol:[]}},
  exportados:{cortes:false,polar:false,gated:false},paso:0};
 // El centro C del eje se guarda en el espacio de indices del volumen donde se marco; origenZ y
 // dz permiten trasladarlo a cualquier otro volumen de la misma fase (la OSEM con AC solo trae los
@@ -202,11 +202,11 @@ function mostrarPolar(){const host=$('polarHost');host.replaceChildren();const c
 /* ---------- gatillado ---------- */
 function pilasGated(f){
  const g=vol(f,'gatillado');if(!g||!ejeDefinido(f))return null;const e=S.ejes[f],Mk=marcoDe(e),Cg=centroPara(g,f),sp=g.spacing,K=Math.max(6,Math.round(e.L+4)),tA=e.L/2+2/sp,tB=-e.L/2;
- return g.data.map(d=>{const sax=[];for(let k=0;k<K;k++){const t=tA-(tA-tB)*k/(K-1);sax.push(C.ejeCorto(d,g.n,g.nz,Cg,Mk,t,M,1));}return {sax,vla:C.ejeLargoVertical(d,g.n,g.nz,Cg,Mk,0,M,1),hla:C.ejeLargoHorizontal(d,g.n,g.nz,Cg,Mk,0,M,1),mid:C.ejeCorto(d,g.n,g.nz,Cg,Mk,0,M,1)};});
+ return g.data.map(d=>{const sax=[];for(let k=0;k<K;k++){const t=tA-(tA-tB)*k/(K-1);sax.push(C.ejeCorto(d,g.n,g.nz,Cg,Mk,t,M,1));}return {sax,pasoMm:(tA-tB)/(K-1)*sp,vla:C.ejeLargoVertical(d,g.n,g.nz,Cg,Mk,0,M,1),hla:C.ejeLargoHorizontal(d,g.n,g.nz,Cg,Mk,0,M,1),mid:C.ejeCorto(d,g.n,g.nz,Cg,Mk,0,M,1)};});
 }
 const cacheGated={};
 function datosGated(f){const g=vol(f,'gatillado');if(!g||!ejeDefinido(f))return null;const clave=[f,g.hash,S.ejes[f].az,S.ejes[f].el,S.ejes[f].C?.join(','),S.ejes[f].L,S.gatedUmbral].join('|');if(cacheGated[f]&&cacheGated[f].clave===clave)return cacheGated[f];
- const pilas=pilasGated(f),radio=Math.max(25,S.ejes[f].L*g.spacing*.45),vols=pilas.map(p=>C.cavidad(p.sax,M,g.spacing,S.gatedUmbral,radio));cacheGated[f]={clave,pilas,vols,g};return cacheGated[f];}
+ const pilas=pilasGated(f),radio=Math.max(25,S.ejes[f].L*g.spacing*.45),vols=pilas.map(p=>C.cavidad(p.sax,M,g.spacing,S.gatedUmbral,radio,p.pasoMm));cacheGated[f]={clave,pilas,vols,g};return cacheGated[f];}
 function elegirPorVolumen(f){const d=datosGated(f);if(!d)return;let ed=0,es=0;d.vols.forEach((v,i)=>{if(v.mL>d.vols[ed].mL)ed=i;if(v.mL<d.vols[es].mL)es=i;});S.gated[f].ED=ed+1;S.gated[f].ES=es+1;}
 function fevi(f){const d=datosGated(f),G=S.gated[f];if(!d||!G.ED||!G.ES)return null;const edv=d.vols[G.ED-1].mL,esv=d.vols[G.ES-1].mL;return {edv,esv,fevi:edv?100*(edv-esv)/edv:NaN};}
 function dibujarGated(){
@@ -220,7 +220,11 @@ function dibujarGated(){
  $('gatedTValor').textContent=t;$('gatedT').max=d.g.slots;
  for(const id of ['gatedED','gatedES']){const sel=$(id),val=S.gated[f][id==='gatedED'?'ED':'ES'];sel.replaceChildren(new Option('—',''));for(let i=1;i<=d.g.slots;i++)sel.add(new Option('intervalo '+i+' · '+C.fmt(d.vols[i-1].mL,0)+' mL',i));sel.value=val?String(val):'';}
  const tb=document.createElement('table');tb.className='tabla';const fila=(c,th)=>{const tr=document.createElement('tr');c.forEach((x,i)=>{const td=document.createElement(th?'th':'td');td.textContent=x;if(!th&&i===0)td.style.textAlign='left';tr.append(td);});tb.append(tr);};
- fila(['Intervalo','Cavidad (mL)'],true);d.vols.forEach((v,i)=>fila([(i+1)+(S.gated[f].ED===i+1?' · FD':'')+(S.gated[f].ES===i+1?' · FS':''),C.fmt(v.mL,0)]));const r=fevi(f);if(r)fila(['FEVI aproximada',C.fmt(r.fevi,0)+' % (VFD '+C.fmt(r.edv,0)+', VFS '+C.fmt(r.esv,0)+' mL)']);$('gatedTabla').replaceChildren(tb);
+ fila(['Intervalo','Cavidad (mL)','Cortes sin pared'],true);d.vols.forEach((v,i)=>fila([(i+1)+(S.gated[f].ED===i+1?' · FD':'')+(S.gated[f].ES===i+1?' · FS':''),C.fmt(v.mL,0),v.abiertos+' de '+v.cortes]));const r=fevi(f);if(r)fila(['FEVI aproximada',C.fmt(r.fevi,0)+' % (VFD '+C.fmt(r.edv,0)+', VFS '+C.fmt(r.esv,0)+' mL)','']);$('gatedTabla').replaceChildren(tb);
+ $('gatedTabla').append(Object.assign(document.createElement('p'),{className:'notice',textContent:'Cavidad por rayos: en cada corte de eje corto, desde el centro del eje, el borde endocárdico es donde las cuentas alcanzan el umbral respecto de la pared de ese rayo. Los cortes en que más de la mitad de los rayos no encuentran pared (más allá del ápex o del plano valvular) no se cuentan.'}));
+ // Aviso cuando sobran cortes sin pared: el eje quedo largo o descentrado.
+ const ed=S.gated[f].ED?d.vols[S.gated[f].ED-1]:d.vols.reduce((a,b)=>b.mL>a.mL?b:a);
+ if(ed.abiertos>ed.cortes*.45)$('gatedTabla').append(Object.assign(document.createElement('p'),{className:'notice',textContent:'En '+ed.abiertos+' de '+ed.cortes+' cortes no se encontró pared alrededor del centro. Si base y ápex quedaron lejos del ventrículo o el eje pasa descentrado, vuelve a marcarlo.'}));
  $('pngGated').disabled=!(fevi('estres')&&fevi('reposo'));
 }
 function paginaGated(){
@@ -292,10 +296,10 @@ function pasosTutorial(n,caso){
    completo:()=>S.exportados.polar,problemas:()=>paginaPolar()?[]:['Faltan volúmenes o el eje de alguna fase.'],
    detalle:()=>S.polar.estres?'Extensión estrés '+C.fmt(S.polar.estres.extension,0)+' %, reposo '+C.fmt(S.polar.reposo.extension,0)+' % (umbral '+Math.round(S.polarUmbral*100)+' %, '+S.polar.tipo+').':''},
   {titulo:'Gatillado: fin de diástole, fin de sístole y FEVI',pantalla:4,resaltar:'panelGated',
-   texto:'El cine recorre los 8 intervalos del ciclo con tus ángulos. La cavidad se segmenta por umbral en cada corte de eje corto y se suma: es un volumen aproximado.',
+   texto:'El cine recorre los 8 intervalos del ciclo con tus ángulos. La cavidad se segmenta en cada corte de eje corto con rayos desde el centro (el borde es donde las cuentas alcanzan el umbral respecto de la pared de ese rayo) y se suma: es un volumen aproximado.',
    haz:['Pulsa «Latir» y mira el engrosamiento y la motilidad de cada pared en los tres cortes.','Elige fin de diástole (cavidad mayor) y fin de sístole (cavidad menor), a ojo o con «Elegir por volumen».','Ajusta el umbral de cavidad si el contorno verde se sale del miocardio o no llena la cavidad.','Repite con la otra fase y descarga el PNG.'],
    deberia:'Un contorno verde dentro de la cavidad en el eje corto medio, una curva de volumen con un mínimo y un máximo, y una FEVI por fase.',
-   ayuda:'Si la FEVI sale absurda (negativa o mayor de 90 %), el contorno se escapó: sube el umbral. En cavidades muy dilatadas el umbral por defecto puede no bastar.',
+   ayuda:'Si la FEVI sale mayor de 90 %, la cavidad se está cerrando en sístole: sube el umbral. Si el contorno verde se mete en la pared, bájalo. En corazones pequeños la cavidad casi desaparece en sístole por el volumen parcial y la FEVI se sobreestima; en cavidades muy dilatadas se subestima el volumen.',
    completo:()=>S.exportados.gated&&!!fevi('estres')&&!!fevi('reposo'),problemas:()=>{const p=[];for(const f of CARDIACO_FASES){if(!datosGated(f))p.push('Falta el gatillado o el eje de '+CARDIACO_NOMBRE_FASE[f]+'.');else if(!fevi(f))p.push('Falta elegir fin de diástole y fin de sístole en '+CARDIACO_NOMBRE_FASE[f]+'.');}return p;},
    detalle:()=>CARDIACO_FASES.map(f=>{const r=fevi(f);return r?CARDIACO_NOMBRE_FASE[f]+': FEVI '+C.fmt(r.fevi,0)+' %, VFD '+C.fmt(r.edv,0)+' mL':'';}).filter(Boolean).join(' · ')}
  ];

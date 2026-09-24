@@ -31,7 +31,7 @@
  <fieldset id="panelGated" hidden><legend>Gatillado</legend>
   <label>Fase <select id="gatedFase"><option value="estres">Estrés</option><option value="reposo">Reposo</option></select></label>
   <div class="fila"><button id="gatedPlay">▶ Latir</button><label>Intervalo <input id="gatedT" type="range" min="1" max="8" value="1"> <output id="gatedTValor">1</output></label></div>
-  <label>Umbral de cavidad <input id="gatedUmbral" type="range" min="30" max="80" value="55"> <output id="gatedUmbralValor">55 %</output> del máximo del corte</label>
+  <label>Umbral de cavidad <input id="gatedUmbral" type="range" min="30" max="90" value="75"> <output id="gatedUmbralValor">75 %</output> de la pared en cada rayo</label>
   <div class="fila"><label>Fin de diástole <select id="gatedED"></select></label><label>Fin de sístole <select id="gatedES"></select></label><button id="gatedAuto">Elegir por volumen</button></div>
   <div id="gatedTabla"></div>
   <p class="notice">Volúmenes por umbral de cavidad en el eje corto: aproximados. La FEVI del informe viene de QGS, con superficies ajustadas; la diferencia se discute, no se corrige.</p>
@@ -60,4 +60,4 @@
 <footer class="statusbar"><span id="status" role="status" aria-live="polite">Listo.</span><span id="posicion">Paso 1 de 5</span></footer></main>
 <footer class="taskbar"><button id="inicio">▦ Inicio</button><span class="task">Simulador cardíaco</span><span class="clock">Laboratorio educativo</span></footer>
 <dialog id="acerca"><header class="titlebar">Acerca del simulador cardíaco</header><div><h2>Segunda parte del SPECT de perfusión miocárdica</h2><p>Carga las OSEM que reconstruiste en SPECT Lab 95, marca el eje del ventrículo izquierdo, arma la página de cortes en los tres ejes, el mapa polar de 17 segmentos y el cine gatillado con volúmenes aproximados, y compara con el informe al terminar.</p><p>Uso docente. No es un programa validado para diagnóstico. Los archivos se leen en tu navegador y no se envían a ningún servidor. Incluye dicom-parser (MIT).</p><button id="cerrarAcerca">Aceptar</button></div></dialog>
-<script src="vendor/dicomParser.min.js"></script><script src="cardiaco-core.js?v=3"></script><script src="renal-tutorial.js?v=1"></script><script src="cardiaco-casos.js?v=2"></script><script src="cardiaco-app.js?v=3"></script></body></html>
+<script src="vendor/dicomParser.min.js"></script><script src="cardiaco-core.js?v=4"></script><script src="renal-tutorial.js?v=1"></script><script src="cardiaco-casos.js?v=3"></script><script src="cardiaco-app.js?v=4"></script></body></html>

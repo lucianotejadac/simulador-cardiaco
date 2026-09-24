@@ -97,9 +97,11 @@ const CardiacoCore=(()=>{
   const anillos=[[11,21,7,1.5],[24,44,14,4]].map(([a,b,R,rIn])=>{const r0=a/spacing,r1=b/spacing,pts=[];for(let j=-R;j<=R;j++)for(let i=-R;i<=R;i++){const r=Math.hypot(i,j);if(r<=rIn)pts.push([i,j,-1]);else if(r>=r0&&r<=r1)pts.push([i,j,Math.floor(((Math.atan2(j,i)+Math.PI)/(2*Math.PI))*8)%8]);}return pts;});
   const puntajeCon=(pts,x,y,z)=>{const sec=new Float64Array(8),cnt=new Float64Array(8);let cen=0,ncen=0;
    for(const [i,j,s] of pts){const v=muestra(vol,n,nz,x+M.u[0]*i+M.v[0]*j,y+M.u[1]*i+M.v[1]*j,z+M.u[2]*i+M.v[2]*j);if(s<0){cen+=v;ncen++;}else{sec[s]+=v;cnt[s]++;}}
-   // Sector mas debil menos el centro, castigando anillos desparejos (el borde del higado forma
-   // "anillos" con un lado muy brillante y otro vacio; el ventriculo es parejo).
-   let min=Infinity,max=0;for(let s=0;s<8;s++){const q=cnt[s]?sec[s]/cnt[s]:0;min=Math.min(min,q);max=Math.max(max,q);}return min-(ncen?cen/ncen:0)-.5*(max-min);};
+   // Promedio de los tres sectores mas debiles menos el centro, castigando anillos desparejos (el
+   // borde del higado forma "anillos" con un lado muy brillante y otro vacio; el ventriculo es
+   // parejo). Se promedian tres sectores y no uno solo porque en estudios con pocas cuentas
+   // (estres de 9 mCi) el ruido hunde siempre algun sector y el anillo verdadero puntuaba negativo.
+   const prom=[];for(let s=0;s<8;s++)prom.push(cnt[s]?sec[s]/cnt[s]:0);prom.sort((a,b)=>a-b);const min=(prom[0]+prom[1]+prom[2])/3,max=prom[7];return min-(ncen?cen/ncen:0)-.5*(max-min);};
   let mejor={p:-Infinity},pts=anillos[0];
   for(const cand of anillos)for(let z=2;z<nz-2;z+=2)for(let y=c-26;y<=c+14;y+=2)for(let x=c-10;x<=c+30;x+=2){const p=puntajeCon(cand,x,y,z);if(p>mejor.p){mejor={p,x,y,z};pts=cand;}}
   if(!(mejor.p>0))return null;
@@ -152,13 +154,35 @@ const CardiacoCore=(()=>{
  }
  /* Cavidad por umbral en una pila de eje corto: pixeles con valor < umbral*maximo del corte,
     conectados al centro, dentro de radioMax. Devuelve volumen en mL y mascaras. */
- function cavidad(pila,m,spacing,umbral,radioMaxMm){
-  const rmax=radioMaxMm/spacing,c=(m-1)/2;let vox=0;const mascaras=[];
-  for(const img of pila){let max=0;for(let i=0;i<img.length;i++)if(img[i]>max)max=img[i];const th=umbral*max,mk=new Uint8Array(m*m);
-   const ci=Math.round(c),start=ci*m+ci;if(img[start]>=th){mascaras.push(mk);continue;}
-   const cola=[start];mk[start]=1;while(cola.length){const i=cola.pop(),x=i%m,y=(i-x)/m;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=m||ny>=m)continue;if(Math.hypot(nx-c,ny-c)>rmax)continue;const j=ny*m+nx;if(!mk[j]&&img[j]<th){mk[j]=1;cola.push(j);}}}
-   let s=0;for(let i=0;i<mk.length;i++)s+=mk[i];vox+=s;mascaras.push(mk);}
-  return {mL:vox*Math.pow(spacing,3)/1000,voxeles:vox,mascaras};
+ /* Cavidad por segmentacion radial en una pila de eje corto (indice 0 = apex, ultimo = base).
+    En cada corte se lanzan 72 rayos desde el centro; en cada rayo la pared es el primer maximo
+    (se deja de buscar cuando la cuenta cae bajo el 70 % del maximo visto, asi el higado detras
+    de la pared inferior no la reemplaza) y el borde endocardico es el primer punto, desde el
+    centro, que alcanza umbral*pared. Un rayo sin pared (maximo bajo el 30 % del maximo de la
+    pila) toma el radio medio de los rayos con pared. Un corte con mas de la mitad de los rayos
+    sin pared no tiene cavidad medible (mas alla del apex, o plano valvular) y, si esta en la
+    mitad basal, cierra la cuenta hacia la base. Se reemplazo el relleno por umbral del corte
+    porque en los cortes basales el relleno se escapaba por el plano valvular y llenaba discos
+    enteros: el volumen dependia del largo del eje mas que del ventriculo. */
+ function cavidad(pila,m,spacing,umbral,radioMaxMm,pasoMm){
+  const rmax=radioMaxMm/spacing,c=(m-1)/2,K=pila.length,NA=72,paso=pasoMm||spacing;
+  // Maximo robusto de la pila (percentil 99,5 de los pixeles positivos): en un estudio con pocas
+  // cuentas el maximo absoluto es un pixel de ruido y dejaria todos los rayos "sin pared".
+  const pos=[];for(const img of pila)for(let i=0;i<img.length;i+=2)if(img[i]>0)pos.push(img[i]);pos.sort((a,b)=>a-b);const stackMax=pos.length?pos[Math.floor(pos.length*.995)]:0;
+  const val=(img,x,y)=>{const x0=Math.floor(x),y0=Math.floor(y);if(x0<0||y0<0||x0>=m-1||y0>=m-1)return 0;const fx=x-x0,fy=y-y0;return img[y0*m+x0]*(1-fx)*(1-fy)+img[y0*m+x0+1]*fx*(1-fy)+img[(y0+1)*m+x0]*(1-fx)*fy+img[(y0+1)*m+x0+1]*fx*fy;};
+  let area2=0,excluidos=0,cerrado=false;const mascaras=[],sinPared=[];
+  pila.forEach((img,k)=>{const mk=new Uint8Array(m*m);
+   if(cerrado){mascaras.push(mk);sinPared.push(true);excluidos++;return;}
+   const radios=new Float64Array(NA),valido=new Uint8Array(NA);let nv=0;
+   for(let q=0;q<NA;q++){const fi=q/NA*2*Math.PI,dx=Math.cos(fi),dy=Math.sin(fi);let w=0,rw=0;
+    for(let r=0;r<=rmax;r+=.5){const s=val(img,c+dx*r,c+dy*r);if(s>w){w=s;rw=r;}else if(w>=.3*stackMax&&s<.7*w)break;}
+    if(w<.3*stackMax)continue;valido[q]=1;nv++;const th=umbral*w;let re=0;while(re<rw&&val(img,c+dx*re,c+dy*re)<th)re+=.25;radios[q]=re;}
+   if(nv<NA/2){mascaras.push(mk);sinPared.push(true);excluidos++;if(k>=K/2)cerrado=true;return;}
+   let prom=0;for(let q=0;q<NA;q++)if(valido[q])prom+=radios[q];prom/=nv;for(let q=0;q<NA;q++)if(!valido[q])radios[q]=prom;
+   let area=0;for(let q=0;q<NA;q++)area+=.5*radios[q]*radios[(q+1)%NA]*Math.sin(2*Math.PI/NA);
+   for(let y=0;y<m;y++)for(let x=0;x<m;x++){const dx=x-c,dy=y-c,r=Math.hypot(dx,dy);let fi=Math.atan2(dy,dx);if(fi<0)fi+=2*Math.PI;const q=Math.round(fi/(2*Math.PI)*NA)%NA;if(r<radios[q])mk[y*m+x]=1;}
+   area2+=area;mascaras.push(mk);sinPared.push(false);});
+  return {mL:area2*spacing*spacing*paso/1000,voxeles:area2*paso/spacing,mascaras,abiertos:excluidos,abiertosPor:sinPared,cortes:K};
  }
  /* Paletas. */
  const hot=v=>[Math.min(255,v*3*255),Math.max(0,Math.min(255,(v*3-1)*255)),Math.max(0,Math.min(255,(v*3-2)*255))];

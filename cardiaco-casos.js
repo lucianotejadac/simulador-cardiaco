@@ -105,7 +105,8 @@ const CARDIACO_CASOS={
    'Vas a tener que decidir con cuál reconstrucción informas, sin AC o con AC. Mira con atención qué hay debajo de la pared inferior antes de decidir.'
   ],
   reveladas:[
-   'El informe usó las imágenes sin corrección de atenuación: en reposo había actividad intestinal pegada a la pared inferior y la AC la exageraba.'
+   'El informe usó las imágenes sin corrección de atenuación: en reposo había actividad intestinal pegada a la pared inferior y la AC la exageraba.',
+   'Es un corazón pequeño (VFD 69 y 49 mL en QGS). Con vóxeles de 3,3 mm la cavidad casi se cierra en sístole por volumen parcial y la FEVI se sobreestima; QGS también lo hace en corazones pequeños. Si tu FEVI salió más alta que la del informe, ese es el motivo antes que un error de eje.'
   ],
   preguntas:[
    '¿Por qué la actividad intestinal altera más la imagen con corrección de atenuación que la imagen sin corregir? Piensa en qué hace la AC con las cuentas cercanas a la pared inferior.',
