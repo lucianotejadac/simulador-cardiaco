@@ -1,6 +1,7 @@
 /* Panel de tutorial compartido por los simuladores renales. La aplicacion entrega los casos,
    la lista de pasos con sus comprobaciones y el bloque de cierre; este archivo solo dibuja el
-   panel, guarda el caso elegido y resalta el control que toca usar. Identico en ambos repos. */
+   panel, guarda el caso elegido, resalta el control que toca usar y le tira la linea de puntos
+   (TutorialLinea, si esta cargada). Identico en todos los simuladores que lo usan. */
 'use strict';
 const RenalTutorial=(()=>{
  function nodo(tag,texto,clase){const n=document.createElement(tag);if(texto!==undefined&&texto!==null)n.textContent=texto;if(clase)n.className=clase;return n;}
@@ -14,8 +15,8 @@ const RenalTutorial=(()=>{
   function guardar(){try{sessionStorage.setItem(cfg.clave,JSON.stringify({caso:estado.caso,abierto:estado.abierto}));}catch(e){}}
   let resaltado=null;
   function resaltar(id){
-   if(resaltado){resaltado.classList.remove('tutorialResaltado');resaltado=null;}
-   if(!id)return;const el=document.getElementById(id);if(!el||el.hidden||el.closest('[hidden]'))return;el.classList.add('tutorialResaltado');resaltado=el;
+   if(resaltado){resaltado.classList.remove('tutorialResaltado');resaltado=null;}if(window.TutorialLinea)TutorialLinea.limpiar();
+   if(!id)return;const el=document.getElementById(id);if(!el||el.hidden||el.closest('[hidden]'))return;el.classList.add('tutorialResaltado');resaltado=el;if(window.TutorialLinea)TutorialLinea.apuntar(cont,[el]);
   }
   function setCaso(n){estado.caso=cfg.casos[n]?Number(n):null;guardar();if(cfg.onCaso)cfg.onCaso(estado.caso);render();}
   function abrir(v=true){estado.abierto=v;guardar();render();}
