@@ -115,13 +115,13 @@ El caso 5 (ventr√≠culo de 700 mL, FEVI de 7 %) queda dentro de tolerancia en FEV
 
 **Validaci√≥n.** Prueba de clics en los seis casos con el largo del ventr√≠culo medido en la imagen: azimut y elevaci√≥n a menos de 1¬∞ del eje del equipo en las diez fases con referencia, anillo en el eje corto central con AC y sin AC (8‚Äì12 % en el estr√©s del caso 1, que es ruidoso; 16‚Äì40 % en el resto), FEVI estr√©s/reposo 90/78 (informe 80/68) en el caso 1, 72/69 (67/68) en el 2, 67/66 (61/65) en el 3, 79/72 (68/59) en el 4, 19/14 (7/10) en el 5 y 62/54 (61/57) en el 6; VFD a menos de 30 mL del informe salvo el caso 5 (536/514 contra 708/655) y el estr√©s del caso 6 (105 contra 59, porque la prueba marc√≥ un eje de 130 mm que se pasa de la base: 9 cortes sin pared, y el aviso nuevo lo se√±ala). Los productos de la primera parte del caso 1 se regeneraron y verificaron; los de los dem√°s casos no cambiaron.
 
-### 10. LÌnea del panel al control (26-09-2026)
+### 10. L√≠nea del panel al control (26-09-2026)
 
-**Contexto.** Al comparar con la consola TC (`consola-tc`), lo que m·s le faltaba a este tutorial era decir *dÛnde* actuar: el contorno magenta sobre un panel entero no basta, y en el caso 2 el problema del docente fue justamente ´dÛnde hago clicª.
+**Contexto.** Al comparar con la consola TC (`consola-tc`), lo que m√°s le faltaba a este tutorial era decir *d√≥nde* actuar: el contorno magenta sobre un panel entero no basta, y en el caso 2 el problema del docente fue justamente ¬´d√≥nde hago clic¬ª.
 
-**DecisiÛn.** Un mÛdulo compartido, `tutorial-linea.js`, dibuja una lÌnea de puntos animada desde el borde del panel del tutorial hasta el control resaltado, con punta de flecha y un carril por control cuando hay varios. La capa es fija, no recibe clics, se vuelve a medir sola cada 300 ms mientras haya objetivos (la p·gina se reacomoda al cargar vol˙menes) y respeta `prefers-reduced-motion`. El panel solo la llama desde `resaltar`: `TutorialLinea.apuntar(panel, [controles])` y `limpiar()`. El mÛdulo se expone en `window` porque los paneles preguntan por `window.TutorialLinea` y un `const` de nivel superior no crea esa propiedad: la primera prueba no dibujÛ nada por eso. Es idÈntico en simulador-cardiaco, simulador-dmsa, simulador-renograma, simulador-tiroides y spect-lab-95 (paratiroides y cardÌaco).
+**Decisi√≥n.** Un m√≥dulo compartido, `tutorial-linea.js`, dibuja una l√≠nea de puntos animada desde el borde del panel del tutorial hasta el control resaltado, con punta de flecha y un carril por control cuando hay varios. La capa es fija, no recibe clics, se vuelve a medir sola cada 300 ms mientras haya objetivos (la p√°gina se reacomoda al cargar vol√∫menes) y respeta `prefers-reduced-motion`. El panel solo la llama desde `resaltar`: `TutorialLinea.apuntar(panel, [controles])` y `limpiar()`. El m√≥dulo se expone en `window` porque los paneles preguntan por `window.TutorialLinea` y un `const` de nivel superior no crea esa propiedad: la primera prueba no dibuj√≥ nada por eso. Es id√©ntico en simulador-cardiaco, simulador-dmsa, simulador-renograma, simulador-tiroides y spect-lab-95 (paratiroides y card√≠aco).
 
-**ValidaciÛn.** Capturas sin interfaz de los cinco simuladores en el primer paso de un caso: la lÌnea sale del panel y llega al selector de archivos en todos.
+**Validaci√≥n.** Capturas sin interfaz de los cinco simuladores en el primer paso de un caso: la l√≠nea sale del panel y llega al selector de archivos en todos.
 
 ### Pendientes y advertencias
 
