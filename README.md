@@ -22,3 +22,8 @@ Los productos son tres PNG: cortes, mapa polar y gatillado.
 ## Privacidad y alcance
 
 Todo ocurre en el navegador; ningún archivo se envía a un servidor. Los casos están desidentificados. Es un simulador docente: no está validado para diagnóstico ni decisiones clínicas. Incluye dicom-parser (MIT). Las decisiones de diseño están en `BITACORA.md`.
+
+## Licencia
+
+© 2026 Luciano Tejada Castro. Distribuido bajo licencia [MIT](LICENSE).
+Los componentes y datos de terceros conservan sus propias licencias, indicadas en este documento o junto a ellos.
